@@ -34,7 +34,7 @@ export interface WorkflowCardProps {
   title: string
   description: string
   status: 'idle' | 'running' | 'completed' | 'error'
-  category: 'social-media' | 'content-creation' | 'analytics' | 'automation'
+  category: 'collections' | 'brand-content' | 'client-insights' | 'sustainability' | 'retail-operations'
   hasChat: boolean
   expectsFiles: boolean
   outputs: WorkflowOutput[]
@@ -53,10 +53,11 @@ const statusConfig = {
 }
 
 const categoryColors = {
-  'social-media': 'bg-pink-100 text-pink-800',
-  'content-creation': 'bg-purple-100 text-purple-800',
-  'analytics': 'bg-blue-100 text-blue-800',
-  'automation': 'bg-green-100 text-green-800'
+  'collections': 'yaya-spring-bg yaya-spring',
+  'brand-content': 'yaya-summer-bg yaya-summer', 
+  'client-insights': 'yaya-autumn-bg yaya-autumn',
+  'sustainability': 'yaya-winter-bg yaya-winter',
+  'retail-operations': 'yaya-linen-bg text-foreground'
 }
 
 const outputIcons = {
@@ -85,17 +86,17 @@ export function WorkflowCard({
   const StatusIcon = statusConfig[status].icon
 
   return (
-    <Card className="h-full transition-all duration-200 hover:shadow-md">
+    <Card className="h-full yaya-card">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <CardTitle className="text-lg font-medium">{title}</CardTitle>
+              <CardTitle className="text-lg font-medium yaya-heading">{title}</CardTitle>
               <Badge variant="secondary" className={categoryColors[category]}>
                 {category.replace('-', ' ')}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2 yaya-body">
               {description}
             </p>
           </div>

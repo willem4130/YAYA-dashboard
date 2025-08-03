@@ -175,84 +175,95 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="border-b bg-card yaya-linen-texture">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-light tracking-tight">
-                YAYA <span className="text-muted-foreground font-normal">Workflow Hub</span>
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Streamline your creative processes with AI-powered workflows
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary rounded-sm flex items-center justify-center shadow-sm">
+                <span className="text-primary-foreground yaya-heading text-2xl">Y</span>
+              </div>
+              <div>
+                <h1 className="text-3xl yaya-heading tracking-tight">
+                  YAYA <span className="text-muted-foreground yaya-subheading font-normal">Atelier</span>
+                </h1>
+                <p className="text-muted-foreground mt-1 yaya-body">
+                  Creative intelligence for refined fashion
+                </p>
+              </div>
             </div>
-            <Button className="bg-accent hover:bg-accent/90">
-              <Plus className="w-4 h-4 mr-2" />
-              New Workflow
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="text-right text-sm">
+                <div className="font-medium">Spring 2024</div>
+                <div className="text-muted-foreground text-xs">Current Collection</div>
+              </div>
+              <Button className="bg-accent hover:bg-accent/90 yaya-button">
+                <Plus className="w-4 h-4 mr-2" />
+                New Process
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Stats Cards */}
+        {/* YAYA Atelier Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="yaya-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Target className="w-4 h-4" />
-                Active Workflows
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2 yaya-subheading">
+                <Target className="w-4 h-4 yaya-spring" />
+                Active Processes
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-light">{mockWorkflows.length}</div>
-              <p className="text-xs text-muted-foreground">
-                {runningCount} currently running
+              <div className="text-2xl font-light yaya-heading">{yayaWorkflows.length}</div>
+              <p className="text-xs text-muted-foreground yaya-body">
+                {runningCount} currently crafting
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="yaya-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                Completed Today
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2 yaya-subheading">
+                <span className="w-4 h-4 flex items-center justify-center text-xs yaya-summer">✏️</span>
+                Design Velocity
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-light">{completedToday}</div>
-              <p className="text-xs text-muted-foreground">
-                +12% from yesterday
+              <div className="text-2xl font-light yaya-heading">12</div>
+              <p className="text-xs text-muted-foreground yaya-body">
+                pieces this week
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="yaya-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Team Efficiency
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2 yaya-subheading">
+                <span className="w-4 h-4 flex items-center justify-center text-xs yaya-autumn">🏪</span>
+                Boutique Performance
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-light">94%</div>
-              <p className="text-xs text-muted-foreground">
-                Average success rate
+              <div className="text-2xl font-light yaya-heading">8</div>
+              <p className="text-xs text-muted-foreground yaya-body">
+                locations active
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="yaya-card">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                AI Insights
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2 yaya-subheading">
+                <span className="w-4 h-4 flex items-center justify-center text-xs yaya-winter">🌱</span>
+                Sustainability Goals
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-light">23</div>
-              <p className="text-xs text-muted-foreground">
-                Optimization suggestions
+              <div className="text-2xl font-light yaya-heading">78%</div>
+              <p className="text-xs text-muted-foreground yaya-body">
+                2024 progress
               </p>
             </CardContent>
           </Card>
@@ -263,7 +274,7 @@ export default function HomePage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search workflows..."
+              placeholder="Search creative processes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -277,11 +288,12 @@ export default function HomePage() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="social-media">Social Media</SelectItem>
-                <SelectItem value="content-creation">Content Creation</SelectItem>
-                <SelectItem value="analytics">Analytics</SelectItem>
-                <SelectItem value="automation">Automation</SelectItem>
+                <SelectItem value="all">All Departments</SelectItem>
+                <SelectItem value="collections">Collections</SelectItem>
+                <SelectItem value="brand-content">Brand Content</SelectItem>
+                <SelectItem value="client-insights">Client Insights</SelectItem>
+                <SelectItem value="sustainability">Sustainability</SelectItem>
+                <SelectItem value="retail-operations">Retail Operations</SelectItem>
               </SelectContent>
             </Select>
 
@@ -316,14 +328,16 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-12">
-            <Brain className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No workflows found</h3>
-            <p className="text-muted-foreground mb-4">
-              Try adjusting your search criteria or create a new workflow
+            <div className="w-16 h-16 bg-muted rounded-sm flex items-center justify-center mx-auto mb-6 yaya-linen-texture">
+              <span className="text-2xl yaya-heading text-muted-foreground">Y</span>
+            </div>
+            <h3 className="text-lg font-medium mb-2 yaya-heading">Your atelier awaits your creative vision</h3>
+            <p className="text-muted-foreground mb-4 yaya-body max-w-md mx-auto">
+              Refine your search to discover the perfect creative process, or begin crafting something new
             </p>
-            <Button>
+            <Button className="yaya-button">
               <Plus className="w-4 h-4 mr-2" />
-              Create Your First Workflow
+              Begin Your Creative Process
             </Button>
           </div>
         )}
