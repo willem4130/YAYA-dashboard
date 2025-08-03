@@ -1,0 +1,153 @@
+
+> YAYA-dashboard@0.1.0 dev
+> next dev --turbo
+
+   ▲ Next.js 15.3.5 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.68.107:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 88ms
+ ✓ Ready in 770ms
+🌐 YAYA API: GET /api/debug/env {
+  requestId: '188aad56-7cd2-4771-b9e7-fa06b414477d',
+  method: 'GET',
+  url: '/api/debug/env',
+  userAgent: 'curl/8.7.1',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:15:06.511Z',
+  ip: 'unknown'
+}
+ ✓ Compiled /api/debug/env in 360ms
+ GET /api/debug/env 200 in 445ms
+🌐 YAYA API: POST /api/chat {
+  requestId: 'bd99b5c5-5dcc-42c7-a1f9-faf054638483',
+  method: 'POST',
+  url: '/api/chat',
+  userAgent: 'curl/8.7.1',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:15:14.853Z',
+  ip: 'unknown'
+}
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 1045ms
+ POST /api/chat 404 in 1114ms
+🌐 YAYA API: POST /api/workflows/yaya-creative-assistant/chat {
+  requestId: 'd463778a-eeda-4887-9439-068e7bdad914',
+  method: 'POST',
+  url: '/api/workflows/yaya-creative-assistant/chat',
+  userAgent: 'curl/8.7.1',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:16:05.892Z',
+  ip: 'unknown'
+}
+ ✓ Compiled /api/workflows/[id]/chat in 180ms
+Error: Route "/api/workflows/[id]/chat" used `params.id`. `params` should be awaited before using its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+    at POST (src/app/api/workflows/[id]/chat/route.ts:47:30)
+  45 | ) {
+  46 |   try {
+> 47 |     const workflowId = params.id
+     |                              ^
+  48 |     const formData = await request.formData()
+  49 |     
+  50 |     const message = formData.get('message') as string
+Chat processing error: [TypeError: Content-Type was not one of "multipart/form-data" or "application/x-www-form-urlencoded".]
+ POST /api/workflows/yaya-creative-assistant/chat 500 in 474ms
+🌐 YAYA API: POST /api/workflows/yaya-creative-assistant/chat {
+  requestId: 'f5f9d8de-1edf-41a7-9420-b6597710eb05',
+  method: 'POST',
+  url: '/api/workflows/yaya-creative-assistant/chat',
+  userAgent: 'curl/8.7.1',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:16:35.618Z',
+  ip: 'unknown'
+}
+ POST /api/workflows/yaya-creative-assistant/chat 404 in 46ms
+🌐 YAYA API: POST /api/workflows/yaya-creative-assistant/execute {
+  requestId: '26f989d3-7ad1-47db-8ee8-14f6cf12db6e',
+  method: 'POST',
+  url: '/api/workflows/yaya-creative-assistant/execute',
+  userAgent: 'curl/8.7.1',
+  duration: '1ms',
+  timestamp: '2025-08-03T14:17:21.047Z',
+  ip: 'unknown'
+}
+ ✓ Compiled /api/workflows/[id]/execute in 274ms
+ POST /api/workflows/yaya-creative-assistant/execute 503 in 723ms
+🌐 YAYA API: POST /api/workflows/yaya-creative-assistant/execute {
+  requestId: '22555a6b-c245-4394-bd6a-b1ce4ab576d2',
+  method: 'POST',
+  url: '/api/workflows/yaya-creative-assistant/execute',
+  userAgent: 'curl/8.7.1',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:18:12.911Z',
+  ip: 'unknown'
+}
+ POST /api/workflows/yaya-creative-assistant/execute 503 in 157ms
+ ✓ Compiled middleware in 1ms
+ ○ Compiling / ...
+ ✓ Compiled / in 666ms
+ GET / 200 in 854ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 42ms
+ ○ Compiling /debug ...
+ ✓ Compiled /debug in 591ms
+ GET /debug 200 in 674ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 105ms
+🌐 YAYA API: POST /api/test-webhook {
+  requestId: '0cc98cd8-5d5c-4b59-8f42-9d2355c4effb',
+  method: 'POST',
+  url: '/api/test-webhook',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.',
+  duration: '0ms',
+  timestamp: '2025-08-03T14:28:43.388Z',
+  ip: 'unknown'
+}
+ ✓ Compiled /api/test-webhook in 200ms
+🧪 Proxying webhook test to: https://primary-production-c041f.up.railway.app/webhook/ee7ff2e9-9c2f-4c31-81af-76cbb3f74a9e
+📤 Test payload: {
+  workflowId: 'yaya-creative-assistant',
+  message: 'Test message from YAYA dashboard - please respond with creative fashion advice!',
+  context: 'dashboard-test',
+  timestamp: '2025-08-03T14:28:43.385Z',
+  yayaTest: {
+    source: 'yaya-dashboard-debugger',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+    testId: 'test_1754231323385'
+  }
+}
+📡 n8n response: 200 OK
+📥 n8n response body: 
+ POST /api/test-webhook 200 in 2709ms
+ GET / 200 in 23ms
+ ✓ Compiled middleware in 2ms
+ ✓ Compiled in 4ms
+ GET / 200 in 80ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 34ms
+ GET / 200 in 85ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 30ms
+ GET / 200 in 80ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 33ms
+ GET / 200 in 72ms
+ ✓ Compiled in 21ms
+ ✓ Compiled in 39ms
+ GET / 200 in 209ms
+ GET / 200 in 76ms
+ ✓ Compiled in 11ms
+ ✓ Compiled in 10ms
+ ✓ Compiled in 30ms
+ GET / 200 in 162ms
+ GET / 200 in 87ms
+ ✓ Compiled in 12ms
+ GET / 200 in 164ms
+ ✓ Compiled in 10ms
+ ✓ Compiled in 35ms
+ GET / 200 in 172ms
+ GET / 200 in 82ms
+ GET / 200 in 68ms
+ GET / 200 in 73ms
+ GET / 200 in 80ms
+ ✓ Compiled in 95ms
+ ✓ Compiled in 44ms
+ ✓ Compiled in 29ms
+ GET / 200 in 174ms

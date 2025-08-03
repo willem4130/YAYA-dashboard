@@ -345,5 +345,17 @@ export function createMockN8nService(): MockN8nService {
 
 // Check if we should use mock service
 export function shouldUseMockService(): boolean {
+  // Force use of real service when we have a Railway webhook URL configured
+  if (
+    process.env.N8N_WEBHOOK_BASE_URL?.includes(
+      'primary-production-c041f.up.railway.app'
+    )
+  ) {
+    return false
+  }
+  // Also check for the old n8n cloud URL for backwards compatibility
+  if (process.env.N8N_WEBHOOK_BASE_URL?.includes('willem4130.app.n8n.cloud')) {
+    return false
+  }
   return !process.env.N8N_API_KEY || process.env.NODE_ENV === 'development'
 }

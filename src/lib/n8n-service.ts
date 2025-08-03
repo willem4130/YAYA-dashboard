@@ -72,7 +72,10 @@ export class N8nService {
     payload: Record<string, any>,
     options: { timeout?: number; waitForCompletion?: boolean } = {}
   ): Promise<{ executionId: string; data?: any }> {
-    const url = `${this.config.webhookBaseUrl}/${webhookId}`
+    // Use full webhook URL directly for YAYA Creative Assistant
+    const url = webhookId.startsWith('http')
+      ? webhookId
+      : `${this.config.webhookBaseUrl}/${webhookId}`
 
     try {
       const response = await fetch(url, {

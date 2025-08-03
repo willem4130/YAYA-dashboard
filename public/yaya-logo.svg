@@ -1,0 +1,8 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- YAYA logo with sophisticated typography -->
+  <text x="8" y="28" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="300" fill="currentColor" letter-spacing="0.1em">
+    YAYA
+  </text>
+  <!-- Subtle underline accent -->
+  <line x1="8" y1="32" x2="88" y2="32" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+</svg>

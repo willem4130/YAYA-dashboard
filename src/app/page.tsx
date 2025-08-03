@@ -9,8 +9,10 @@ import {
   WorkflowCard,
   type WorkflowOutput,
 } from '@/components/ui/workflow-card'
-import { ChatInterface } from '@/components/ui/chat-interface'
+import { YayaChatInterface } from '@/components/ui/yaya-chat-interface'
+import { WorkflowSettings } from '@/components/ui/workflow-settings'
 import { SeasonalBanner } from '@/components/ui/seasonal-banner'
+import { WorkflowResultDisplay } from '@/components/ui/workflow-result-display'
 import {
   Select,
   SelectContent,
@@ -70,108 +72,18 @@ const getTestInputsForWorkflow = (workflowId: string) => {
   return testInputs[workflowId] || {}
 }
 
-// YAYA Atelier Workflows - Authentic brand processes
+// YAYA Atelier Workflows - Streamlined for chat focus
 const yayaWorkflows = [
   {
-    id: 'spring-collection-storytelling',
-    title: 'Spring Collection Storytelling',
+    id: 'yaya-creative-assistant',
+    title: 'YAYA Creative Assistant',
     description:
-      "Create cohesive brand narratives for new seasonal pieces, maintaining YAYA's sophisticated yet approachable voice across all touchpoints",
-    status: 'completed' as const,
-    category: 'collections' as const,
-    hasChat: true,
-    expectsFiles: true,
-    lastRun: new Date('2024-01-15'),
-    outputs: [
-      {
-        id: 'spring-narrative-1',
-        type: 'text' as const,
-        content:
-          "Embrace the gentle awakening of spring with YAYA's new collection...",
-        timestamp: new Date(),
-      },
-      {
-        id: 'spring-visual-1',
-        type: 'image' as const,
-        filename: 'spring-2024-campaign-hero.jpg',
-        url: '/mock-image',
-        timestamp: new Date(),
-      },
-    ] as WorkflowOutput[],
-  },
-  {
-    id: 'sustainable-materials-tracker',
-    title: 'Sustainable Materials Tracker',
-    description:
-      "Monitor and report on eco-friendly fabric sourcing aligned with YAYA's commitment to conscious fashion and environmental responsibility",
-    status: 'running' as const,
-    category: 'sustainability' as const,
-    hasChat: true,
-    expectsFiles: false,
-    lastRun: new Date('2024-01-16'),
-    outputs: [
-      {
-        id: 'sustainability-report-q1',
-        type: 'file' as const,
-        filename: 'yaya-sustainability-report-q1-2024.pdf',
-        url: '/mock-report',
-        timestamp: new Date(),
-      },
-    ],
-  },
-  {
-    id: 'client-style-profiles',
-    title: 'Client Style Profile Analysis',
-    description:
-      'Understand customer preferences to enhance personal styling recommendations and guide future collection development with data-driven insights',
-    status: 'completed' as const,
-    category: 'client-insights' as const,
-    hasChat: true,
-    expectsFiles: false,
-    lastRun: new Date('2024-01-14'),
-    outputs: [
-      {
-        id: 'style-insights-1',
-        type: 'text' as const,
-        content:
-          'Client preferences trend toward timeless, versatile pieces in neutral tones...',
-        timestamp: new Date(),
-      },
-    ],
-  },
-  {
-    id: 'boutique-visual-merchandising',
-    title: 'Boutique Visual Merchandising',
-    description:
-      "Generate seasonal window displays and in-store styling concepts that reflect YAYA's refined aesthetic across all retail locations",
-    status: 'idle' as const,
-    category: 'retail-operations' as const,
-    hasChat: false,
-    expectsFiles: true,
-    lastRun: new Date('2024-01-10'),
-    outputs: [],
-  },
-  {
-    id: 'seasonal-campaign-coordinator',
-    title: 'Seasonal Campaign Coordinator',
-    description:
-      'Orchestrate multi-channel seasonal campaigns ensuring brand consistency across digital platforms, retail spaces, and editorial content',
+      "Intelligent conversational assistant for creative direction, styling advice, and brand storytelling with YAYA's sophisticated voice",
     status: 'idle' as const,
     category: 'brand-content' as const,
     hasChat: true,
-    expectsFiles: true,
-    lastRun: new Date('2024-01-12'),
-    outputs: [],
-  },
-  {
-    id: 'artisan-collaboration-tracker',
-    title: 'Artisan Collaboration Tracker',
-    description:
-      'Manage partnerships with local artisans and craftspeople, ensuring authentic storytelling and ethical production practices',
-    status: 'error' as const,
-    category: 'sustainability' as const,
-    hasChat: true,
     expectsFiles: false,
+    lastRun: new Date('2024-01-20'),
     outputs: [],
   },
 ]
@@ -182,6 +94,14 @@ export default function HomePage() {
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
   const [chatWorkflowId, setChatWorkflowId] = useState<string | null>(null)
   const [chatWorkflowTitle, setChatWorkflowTitle] = useState<string>('')
+  const [settingsWorkflowId, setSettingsWorkflowId] = useState<string | null>(
+    null
+  )
+  const [resultDisplay, setResultDisplay] = useState<{
+    workflowId: string
+    executionId: string
+    workflowTitle: string
+  } | null>(null)
 
   const filteredWorkflows = yayaWorkflows.filter(workflow => {
     const matchesSearch =
@@ -224,11 +144,15 @@ export default function HomePage() {
       const result = await response.json()
       console.log('Workflow execution started:', result)
 
-      // Update UI to show running status
-      // In a real app, you'd update the workflow state
-      alert(
-        `YAYA workflow "${result.workflow?.title}" started successfully!\nExecution ID: ${result.executionId}`
-      )
+      // Show result display with polling
+      const workflow = yayaWorkflows.find(w => w.id === id)
+      if (result.executionId && workflow) {
+        setResultDisplay({
+          workflowId: id,
+          executionId: result.executionId,
+          workflowTitle: workflow.title
+        })
+      }
     } catch (error) {
       console.error('Failed to run workflow:', error)
       alert(`Failed to start workflow: ${error.message}`)
@@ -237,7 +161,7 @@ export default function HomePage() {
 
   const handleConfigureWorkflow = (id: string) => {
     console.log('Configuring workflow:', id)
-    // Here you would open workflow configuration
+    setSettingsWorkflowId(id)
   }
 
   const checkWorkflowStatus = async (
@@ -276,6 +200,20 @@ export default function HomePage() {
     setChatWorkflowTitle('')
   }
 
+  const handleCloseSettings = () => {
+    setSettingsWorkflowId(null)
+  }
+
+  const handleCloseResultDisplay = () => {
+    setResultDisplay(null)
+  }
+
+  const handleSaveWorkflowConfig = (config: any) => {
+    console.log('Saving workflow configuration:', config)
+    // Configuration is automatically saved to localStorage by the WorkflowSettings component
+    // Here you could also sync to a backend database if needed
+  }
+
   const handleFeedback = (workflowId: string, outputId: string) => {
     console.log('Providing feedback:', workflowId, outputId)
     // Here you would open feedback interface
@@ -293,14 +231,16 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary rounded-sm flex items-center justify-center shadow-sm">
-                <span className="text-primary-foreground yaya-heading text-2xl">
-                  Y
-                </span>
+              <div className="flex items-center justify-center">
+                <img 
+                  src="/yaya-logo.svg" 
+                  alt="YAYA" 
+                  className="h-10 w-auto text-primary"
+                  style={{ filter: 'brightness(0) saturate(100%) invert(20%) sepia(90%) saturate(2000%) hue-rotate(340deg) brightness(90%) contrast(100%)' }}
+                />
               </div>
               <div>
                 <h1 className="text-3xl yaya-heading tracking-tight">
-                  YAYA{' '}
                   <span className="text-muted-foreground yaya-subheading font-normal">
                     Atelier
                   </span>
@@ -317,6 +257,17 @@ export default function HomePage() {
                   Current Collection
                 </div>
               </div>
+              <Button 
+                asChild
+                variant="outline" 
+                size="sm"
+                className="text-xs"
+              >
+                <a href="/debug">
+                  <Brain className="w-3 h-3 mr-1" />
+                  Debug n8n
+                </a>
+              </Button>
               <Button className="bg-accent hover:bg-accent/90 yaya-button">
                 <Plus className="w-4 h-4 mr-2" />
                 New Process
@@ -466,9 +417,11 @@ export default function HomePage() {
         ) : (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-sm flex items-center justify-center mx-auto mb-6 yaya-linen-texture">
-              <span className="text-2xl yaya-heading text-muted-foreground">
-                Y
-              </span>
+              <img 
+                src="/yaya-logo.svg" 
+                alt="YAYA" 
+                className="h-8 w-auto opacity-50"
+              />
             </div>
             <h3 className="text-lg font-medium mb-2 yaya-heading">
               Your atelier awaits your creative vision
@@ -487,11 +440,30 @@ export default function HomePage() {
 
       {/* Chat Interface */}
       {chatWorkflowId && (
-        <ChatInterface
-          workflowId={chatWorkflowId}
-          workflowTitle={chatWorkflowTitle}
+        <YayaChatInterface
           isOpen={!!chatWorkflowId}
           onClose={handleCloseChatWorkflow}
+        />
+      )}
+
+      {/* Settings Modal */}
+      {settingsWorkflowId && (
+        <WorkflowSettings
+          workflowId={settingsWorkflowId}
+          isOpen={!!settingsWorkflowId}
+          onClose={handleCloseSettings}
+          onSave={handleSaveWorkflowConfig}
+        />
+      )}
+
+      {/* Result Display Modal */}
+      {resultDisplay && (
+        <WorkflowResultDisplay
+          workflowId={resultDisplay.workflowId}
+          executionId={resultDisplay.executionId}
+          workflowTitle={resultDisplay.workflowTitle}
+          isOpen={!!resultDisplay}
+          onClose={handleCloseResultDisplay}
         />
       )}
     </main>

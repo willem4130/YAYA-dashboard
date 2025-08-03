@@ -13,17 +13,21 @@ interface WorkflowOutput {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string; executionId: string } }
+  { params }: { params: Promise<{ id: string; executionId: string }> }
 ) {
   try {
-    const workflowId = params.id
-    const executionId = params.executionId
+    const resolvedParams = await params
+    const workflowId = resolvedParams.id
+    const executionId = resolvedParams.executionId
 
     // Get YAYA workflow configuration
     const workflowConfig = YAYA_WORKFLOWS[workflowId]
     if (!workflowConfig) {
       return NextResponse.json(
-        { error: 'YAYA workflow not found', availableWorkflows: Object.keys(YAYA_WORKFLOWS) },
+        {
+          error: 'YAYA workflow not found',
+          availableWorkflows: Object.keys(YAYA_WORKFLOWS),
+        },
         { status: 404 }
       )
     }
@@ -38,7 +42,10 @@ export async function GET(
     const yayaStatus = mapN8nStatusToYaya(n8nExecution)
 
     // Process outputs based on YAYA workflow type and expected outputs
-    const outputs = await processYayaWorkflowOutputs(workflowConfig, n8nExecution)
+    const outputs = await processYayaWorkflowOutputs(
+      workflowConfig,
+      n8nExecution
+    )
 
     // Get local execution record for additional context
     const localRecord = await getYayaExecutionRecord(executionId)
@@ -49,7 +56,7 @@ export async function GET(
       finishedAt: n8nExecution.stoppedAt,
       outputs,
       progress: yayaStatus.progress,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     })
 
     return NextResponse.json({
@@ -59,48 +66,48 @@ export async function GET(
       progress: yayaStatus.progress,
       startedAt: n8nExecution.startedAt,
       finishedAt: n8nExecution.stoppedAt,
-      
+
       // YAYA workflow context
       workflow: {
         id: workflowId,
         title: workflowConfig.title,
         category: workflowConfig.category,
-        expectedOutputs: workflowConfig.outputs.description
+        expectedOutputs: workflowConfig.outputs.description,
       },
-      
+
       // Outputs processed according to YAYA standards
       outputs,
-      
+
       // Error information if applicable
       error: n8nExecution.data?.resultData?.error?.message || yayaStatus.error,
-      
+
       // Additional YAYA metadata
       yayaMetadata: {
         brandAlignment: workflowConfig.yayaMetadata.brandAlignment,
         seasonalRelevance: workflowConfig.yayaMetadata.seasonalRelevance,
         userContext: localRecord?.userContext,
         estimatedDuration: `${Math.round(workflowConfig.settings.timeout / 60000)} minutes`,
-        version: workflowConfig.yayaMetadata.version
+        version: workflowConfig.yayaMetadata.version,
       },
-      
+
       // n8n technical details
       n8n: {
         workflowId: workflowConfig.n8nWorkflowId,
         executionMode: n8nExecution.mode,
-        waitTill: n8nExecution.waitTill
-      }
+        waitTill: n8nExecution.waitTill,
+      },
     })
-
   } catch (error) {
     console.error('YAYA workflow status check error:', error)
-    
+
     // Enhanced error reporting with YAYA context
+    const resolvedParams = await params
     const errorResponse = {
       error: 'Failed to check YAYA workflow status',
       details: error.message,
       timestamp: new Date().toISOString(),
-      workflowId: params.id,
-      executionId: params.executionId
+      workflowId: resolvedParams.id,
+      executionId: resolvedParams.executionId,
     }
 
     // Different status codes based on error type
@@ -124,12 +131,15 @@ export async function GET(
 }
 
 async function processWorkflowOutputs(
-  workflowId: string, 
+  workflowId: string,
   executionData: N8nExecutionStatus
 ): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
-  if (executionData.status !== 'success' || !executionData.data?.resultData?.runData) {
+  if (
+    executionData.status !== 'success' ||
+    !executionData.data?.resultData?.runData
+  ) {
     return outputs
   }
 
@@ -138,25 +148,27 @@ async function processWorkflowOutputs(
   // Process outputs based on workflow type
   switch (workflowId) {
     case 'social-content-gen':
-      outputs.push(...await processSocialMediaOutputs(runData))
+      outputs.push(...(await processSocialMediaOutputs(runData)))
       break
-    
+
     case 'product-photography':
-      outputs.push(...await processProductPhotoOutputs(runData))
+      outputs.push(...(await processProductPhotoOutputs(runData)))
       break
-    
+
     case 'customer-insights':
-      outputs.push(...await processAnalyticsOutputs(runData))
+      outputs.push(...(await processAnalyticsOutputs(runData)))
       break
-    
+
     default:
-      outputs.push(...await processGenericOutputs(runData))
+      outputs.push(...(await processGenericOutputs(runData)))
   }
 
   return outputs
 }
 
-async function processSocialMediaOutputs(runData: Record<string, any>): Promise<WorkflowOutput[]> {
+async function processSocialMediaOutputs(
+  runData: Record<string, any>
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for image generation node outputs
@@ -169,7 +181,7 @@ async function processSocialMediaOutputs(runData: Record<string, any>): Promise<
           type: 'image',
           filename: binaryData.fileName || `generated-${key}.jpg`,
           url: await uploadToStorage(binaryData.data, binaryData.mimeType),
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     }
@@ -183,7 +195,7 @@ async function processSocialMediaOutputs(runData: Record<string, any>): Promise<
         id: `text-${Date.now()}`,
         type: 'text',
         content: captionData.json.caption,
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -191,7 +203,9 @@ async function processSocialMediaOutputs(runData: Record<string, any>): Promise<
   return outputs
 }
 
-async function processProductPhotoOutputs(runData: Record<string, any>): Promise<WorkflowOutput[]> {
+async function processProductPhotoOutputs(
+  runData: Record<string, any>
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for processed image outputs
@@ -204,7 +218,7 @@ async function processProductPhotoOutputs(runData: Record<string, any>): Promise
           type: 'image',
           filename: binaryData.fileName || `processed-${key}.jpg`,
           url: await uploadToStorage(binaryData.data, binaryData.mimeType),
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     }
@@ -213,7 +227,9 @@ async function processProductPhotoOutputs(runData: Record<string, any>): Promise
   return outputs
 }
 
-async function processAnalyticsOutputs(runData: Record<string, any>): Promise<WorkflowOutput[]> {
+async function processAnalyticsOutputs(
+  runData: Record<string, any>
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for report generation outputs
@@ -226,7 +242,7 @@ async function processAnalyticsOutputs(runData: Record<string, any>): Promise<Wo
         type: 'file',
         filename: binaryData.fileName || 'analytics-report.pdf',
         url: await uploadToStorage(binaryData.data, binaryData.mimeType),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -234,55 +250,72 @@ async function processAnalyticsOutputs(runData: Record<string, any>): Promise<Wo
   return outputs
 }
 
-async function processGenericOutputs(runData: Record<string, any>): Promise<WorkflowOutput[]> {
+async function processGenericOutputs(
+  runData: Record<string, any>
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
-  // Generic processing for any workflow outputs
   for (const [nodeName, nodeData] of Object.entries(runData)) {
     if (nodeData?.data?.main) {
       const mainData = nodeData.data.main[0]
-      
-      // Handle binary outputs
-      if (mainData?.binary) {
-        for (const [key, binaryData] of Object.entries(mainData.binary)) {
-          const mimeType = binaryData.mimeType || 'application/octet-stream'
-          let type: 'image' | 'video' | 'file' = 'file'
-          
-          if (mimeType.startsWith('image/')) type = 'image'
-          else if (mimeType.startsWith('video/')) type = 'video'
-          
-          outputs.push({
-            id: `${nodeName}-${Date.now()}-${key}`,
-            type,
-            filename: binaryData.fileName || `output-${key}`,
-            url: await uploadToStorage(binaryData.data, mimeType),
-            timestamp: new Date()
-          })
-        }
-      }
-      
-      // Handle JSON text outputs
-      if (mainData?.json && typeof mainData.json === 'object') {
-        const jsonString = JSON.stringify(mainData.json, null, 2)
-        if (jsonString.length > 0) {
-          outputs.push({
-            id: `${nodeName}-${Date.now()}-json`,
-            type: 'text',
-            content: jsonString,
-            timestamp: new Date()
-          })
-        }
-      }
+      const nodeOutputs = await processNodeOutputs(nodeName, mainData, '')
+      outputs.push(...nodeOutputs)
     }
   }
 
   return outputs
 }
 
-async function uploadToStorage(base64Data: string, mimeType: string): Promise<string> {
+async function processNodeOutputs(
+  nodeName: string,
+  mainData: any,
+  prefix: string
+): Promise<WorkflowOutput[]> {
+  const outputs: WorkflowOutput[] = []
+
+  // Handle binary outputs
+  if (mainData?.binary) {
+    for (const [key, binaryData] of Object.entries(mainData.binary)) {
+      const binary = binaryData as any
+      const mimeType = binary.mimeType || 'application/octet-stream'
+      let type: 'image' | 'video' | 'file' = 'file'
+
+      if (mimeType.startsWith('image/')) type = 'image'
+      else if (mimeType.startsWith('video/')) type = 'video'
+
+      outputs.push({
+        id: `${prefix}${nodeName}-${Date.now()}-${key}`,
+        type,
+        filename: binary.fileName || `${prefix}output-${key}`,
+        url: await uploadToStorage(binary.data, mimeType),
+        timestamp: new Date(),
+      })
+    }
+  }
+
+  // Handle JSON outputs
+  if (mainData?.json && typeof mainData.json === 'object') {
+    const jsonString = JSON.stringify(mainData.json, null, 2)
+    if (jsonString.length > 0) {
+      outputs.push({
+        id: `${prefix}${nodeName}-${Date.now()}-${prefix ? 'data' : 'json'}`,
+        type: 'text',
+        content: jsonString,
+        timestamp: new Date(),
+      })
+    }
+  }
+
+  return outputs
+}
+
+async function uploadToStorage(
+  base64Data: string,
+  mimeType: string
+): Promise<string> {
   // In a real implementation, this would upload to your storage service (S3, CloudFlare R2, etc.)
   // For now, return a mock URL
-  const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const fileId = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
   return `/api/files/${fileId}`
 }
 
@@ -312,15 +345,18 @@ function mapN8nStatusToYaya(n8nExecution: any): {
     return {
       status: 'failed',
       progress: 100,
-      error: hasError.message || 'Workflow execution failed'
+      error: hasError.message || 'Workflow execution failed',
     }
   }
 
   // Check if manually stopped
-  if (n8nExecution.stoppedAt && !n8nExecution.data?.resultData?.lastNodeExecuted) {
+  if (
+    n8nExecution.stoppedAt &&
+    !n8nExecution.data?.resultData?.lastNodeExecuted
+  ) {
     return {
       status: 'stopped',
-      progress: 50
+      progress: 50,
     }
   }
 
@@ -330,7 +366,7 @@ function mapN8nStatusToYaya(n8nExecution: any): {
     if (waitUntil > new Date()) {
       return {
         status: 'waiting',
-        progress: 30
+        progress: 30,
       }
     }
   }
@@ -338,7 +374,7 @@ function mapN8nStatusToYaya(n8nExecution: any): {
   // Successfully completed
   return {
     status: 'completed',
-    progress: 100
+    progress: 100,
   }
 }
 
@@ -358,33 +394,46 @@ async function processYayaWorkflowOutputs(
   // Process based on YAYA workflow category and expected output types
   switch (workflowConfig.category) {
     case 'collections':
-      outputs.push(...await processCollectionOutputs(runData, workflowConfig))
+      outputs.push(...(await processCollectionOutputs(runData, workflowConfig)))
       break
-    
+
     case 'brand-content':
-      outputs.push(...await processBrandContentOutputs(runData, workflowConfig))
+      outputs.push(
+        ...(await processBrandContentOutputs(runData, workflowConfig))
+      )
       break
-    
+
     case 'client-insights':
-      outputs.push(...await processClientInsightsOutputs(runData, workflowConfig))
+      outputs.push(
+        ...(await processClientInsightsOutputs(runData, workflowConfig))
+      )
       break
-    
+
     case 'sustainability':
-      outputs.push(...await processSustainabilityOutputs(runData, workflowConfig))
+      outputs.push(
+        ...(await processSustainabilityOutputs(runData, workflowConfig))
+      )
       break
-    
+
     case 'retail-operations':
-      outputs.push(...await processRetailOperationsOutputs(runData, workflowConfig))
+      outputs.push(
+        ...(await processRetailOperationsOutputs(runData, workflowConfig))
+      )
       break
-    
+
     default:
-      outputs.push(...await processGenericYayaOutputs(runData, workflowConfig))
+      outputs.push(
+        ...(await processGenericYayaOutputs(runData, workflowConfig))
+      )
   }
 
   return outputs
 }
 
-async function processCollectionOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processCollectionOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for storytelling and narrative content
@@ -395,7 +444,7 @@ async function processCollectionOutputs(runData: Record<string, any>, config: an
         id: `story-${Date.now()}`,
         type: 'text',
         content: storyData.json.narrative,
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -411,7 +460,7 @@ async function processCollectionOutputs(runData: Record<string, any>, config: an
           type: 'image',
           filename: binary.fileName || `collection-visual-${key}.jpg`,
           url: await uploadToStorage(binary.data, binary.mimeType),
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     }
@@ -420,7 +469,10 @@ async function processCollectionOutputs(runData: Record<string, any>, config: an
   return outputs
 }
 
-async function processBrandContentOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processBrandContentOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for campaign materials
@@ -431,7 +483,7 @@ async function processBrandContentOutputs(runData: Record<string, any>, config: 
         id: `campaign-${Date.now()}`,
         type: 'text',
         content: JSON.stringify(campaignData.json.campaign, null, 2),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -447,7 +499,7 @@ async function processBrandContentOutputs(runData: Record<string, any>, config: 
           type: 'image',
           filename: binary.fileName || `brand-asset-${key}.jpg`,
           url: await uploadToStorage(binary.data, binary.mimeType),
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     }
@@ -456,20 +508,23 @@ async function processBrandContentOutputs(runData: Record<string, any>, config: 
   return outputs
 }
 
-async function processClientInsightsOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processClientInsightsOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for analytics reports
   if (runData.analyticsReport?.data?.main) {
     const reportData = runData.analyticsReport.data.main[0]
     if (reportData?.binary?.report) {
-      const binaryData = reportData.binary.report as any
+      const binaryData = reportData.binary.report
       outputs.push({
         id: `insights-report-${Date.now()}`,
         type: 'file',
         filename: binaryData.fileName || 'client-insights-report.pdf',
         url: await uploadToStorage(binaryData.data, binaryData.mimeType),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -482,7 +537,7 @@ async function processClientInsightsOutputs(runData: Record<string, any>, config
         id: `recommendations-${Date.now()}`,
         type: 'text',
         content: JSON.stringify(recData.json.recommendations, null, 2),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -490,20 +545,23 @@ async function processClientInsightsOutputs(runData: Record<string, any>, config
   return outputs
 }
 
-async function processSustainabilityOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processSustainabilityOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for sustainability reports
   if (runData.sustainabilityReport?.data?.main) {
     const reportData = runData.sustainabilityReport.data.main[0]
     if (reportData?.binary?.sustainabilityReport) {
-      const binaryData = reportData.binary.sustainabilityReport as any
+      const binaryData = reportData.binary.sustainabilityReport
       outputs.push({
         id: `sustainability-report-${Date.now()}`,
         type: 'file',
         filename: binaryData.fileName || 'sustainability-report.pdf',
         url: await uploadToStorage(binaryData.data, binaryData.mimeType),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -516,7 +574,7 @@ async function processSustainabilityOutputs(runData: Record<string, any>, config
         id: `compliance-${Date.now()}`,
         type: 'text',
         content: JSON.stringify(complianceData.json.complianceStatus, null, 2),
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -524,7 +582,10 @@ async function processSustainabilityOutputs(runData: Record<string, any>, config
   return outputs
 }
 
-async function processRetailOperationsOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processRetailOperationsOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
   // Look for visual merchandising concepts
@@ -538,7 +599,7 @@ async function processRetailOperationsOutputs(runData: Record<string, any>, conf
           type: 'image',
           filename: binary.fileName || `merchandising-concept-${key}.jpg`,
           url: await uploadToStorage(binary.data, binary.mimeType),
-          timestamp: new Date()
+          timestamp: new Date(),
         })
       }
     }
@@ -552,7 +613,7 @@ async function processRetailOperationsOutputs(runData: Record<string, any>, conf
         id: `instructions-${Date.now()}`,
         type: 'text',
         content: instructionsData.json.instructions,
-        timestamp: new Date()
+        timestamp: new Date(),
       })
     }
   }
@@ -560,53 +621,26 @@ async function processRetailOperationsOutputs(runData: Record<string, any>, conf
   return outputs
 }
 
-async function processGenericYayaOutputs(runData: Record<string, any>, config: any): Promise<WorkflowOutput[]> {
+async function processGenericYayaOutputs(
+  runData: Record<string, any>,
+  config: any
+): Promise<WorkflowOutput[]> {
   const outputs: WorkflowOutput[] = []
 
-  // Process any workflow outputs generically but with YAYA context
   for (const [nodeName, nodeData] of Object.entries(runData)) {
     if (nodeData?.data?.main) {
       const mainData = nodeData.data.main[0]
-      
-      // Handle binary outputs with YAYA naming
-      if (mainData?.binary) {
-        for (const [key, binaryData] of Object.entries(mainData.binary)) {
-          const binary = binaryData as any
-          const mimeType = binary.mimeType || 'application/octet-stream'
-          let type: 'image' | 'video' | 'file' = 'file'
-          
-          if (mimeType.startsWith('image/')) type = 'image'
-          else if (mimeType.startsWith('video/')) type = 'video'
-          
-          outputs.push({
-            id: `yaya-${nodeName}-${Date.now()}-${key}`,
-            type,
-            filename: binary.fileName || `yaya-output-${key}`,
-            url: await uploadToStorage(binary.data, mimeType),
-            timestamp: new Date()
-          })
-        }
-      }
-      
-      // Handle JSON outputs with YAYA formatting
-      if (mainData?.json && typeof mainData.json === 'object') {
-        const jsonString = JSON.stringify(mainData.json, null, 2)
-        if (jsonString.length > 0) {
-          outputs.push({
-            id: `yaya-${nodeName}-${Date.now()}-data`,
-            type: 'text',
-            content: jsonString,
-            timestamp: new Date()
-          })
-        }
-      }
+      const nodeOutputs = await processNodeOutputs(nodeName, mainData, 'yaya-')
+      outputs.push(...nodeOutputs)
     }
   }
 
   return outputs
 }
 
-async function getYayaExecutionRecord(executionId: string): Promise<any | null> {
+async function getYayaExecutionRecord(
+  executionId: string
+): Promise<Record<string, unknown> | null> {
   // Get execution record from global storage (mock database)
   if (typeof global !== 'undefined' && (global as any).yayaExecutions) {
     return (global as any).yayaExecutions.get(executionId) || null
@@ -614,28 +648,30 @@ async function getYayaExecutionRecord(executionId: string): Promise<any | null> 
   return null
 }
 
-async function updateYayaExecutionRecord(executionId: string, updates: Record<string, any>): Promise<void> {
+async function updateYayaExecutionRecord(
+  executionId: string,
+  updates: Record<string, any>
+): Promise<void> {
   // Update execution record in global storage (mock database)
   if (typeof global !== 'undefined') {
     if (!(global as any).yayaExecutions) {
-      (global as any).yayaExecutions = new Map()
+      ;(global as any).yayaExecutions = new Map()
     }
-    
+
     const existingRecord = (global as any).yayaExecutions.get(executionId) || {}
     const updatedRecord = {
       ...existingRecord,
       ...updates,
-      lastUpdated: new Date()
-    }
-    
-    (global as any).yayaExecutions.set(executionId, updatedRecord)
-    
+      lastUpdated: new Date(),
+    };
+    (global as any).yayaExecutions.set(executionId, updatedRecord);
+
     // Log YAYA execution update
     console.log('🔄 YAYA Execution Updated:', {
       executionId,
       status: updates.status,
       outputs: updates.outputs?.length || 0,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
   }
 }
