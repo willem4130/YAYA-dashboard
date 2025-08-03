@@ -25,6 +25,43 @@ import {
   Target
 } from 'lucide-react'
 
+// Test inputs for YAYA workflows
+const getTestInputsForWorkflow = (workflowId: string) => {
+  const testInputs = {
+    'spring-collection-storytelling': {
+      collectionTheme: 'Natural Elegance',
+      targetSeason: 'Spring 2024',
+      keyPieces: ['flowing dresses', 'lightweight blazers', 'artisan accessories'],
+      brandVoice: 'sophisticated',
+      targetAudience: 'conscious-consumers'
+    },
+    'sustainable-materials-tracker': {
+      reportPeriod: 'Q1-2024',
+      materialCategories: ['organic cotton', 'recycled wool', 'hemp blends'],
+      certificationLevel: 'GOTS'
+    },
+    'client-style-profiles': {
+      analysisType: 'style-preferences',
+      timeframe: 'last-quarter',
+      customerSegment: 'vip-customers'
+    },
+    'boutique-visual-merchandising': {
+      boutiqueLocation: 'Amsterdam-Centrum',
+      displayType: 'window-display',
+      currentCollection: 'Spring-Essentials',
+      budgetRange: 'standard'
+    },
+    'seasonal-campaign-coordinator': {
+      campaignSeason: 'Spring-2024',
+      channels: ['digital', 'retail', 'editorial'],
+      campaignObjective: 'collection-launch',
+      budgetAllocation: 'enhanced'
+    }
+  }
+  
+  return testInputs[workflowId] || {}
+}
+
 // YAYA Atelier Workflows - Authentic brand processes
 const yayaWorkflows = [
   {
@@ -139,14 +176,66 @@ export default function HomePage() {
     return matchesSearch && matchesCategory && matchesStatus
   })
 
-  const handleRunWorkflow = (id: string) => {
-    console.log('Running workflow:', id)
-    // Here you would trigger the n8n workflow
+  const handleRunWorkflow = async (id: string) => {
+    console.log('Running YAYA workflow:', id)
+    
+    try {
+      // Test with minimal inputs for demo
+      const testInputs = getTestInputsForWorkflow(id)
+      
+      const response = await fetch(`/api/workflows/${id}/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: testInputs,
+          userContext: {
+            userId: 'test-user',
+            department: 'creative',
+            role: 'brand-manager'
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to execute workflow: ${response.status}`)
+      }
+
+      const result = await response.json()
+      console.log('Workflow execution started:', result)
+      
+      // Update UI to show running status
+      // In a real app, you'd update the workflow state
+      alert(`YAYA workflow "${result.workflow?.title}" started successfully!\nExecution ID: ${result.executionId}`)
+      
+    } catch (error) {
+      console.error('Failed to run workflow:', error)
+      alert(`Failed to start workflow: ${error.message}`)
+    }
   }
 
   const handleConfigureWorkflow = (id: string) => {
     console.log('Configuring workflow:', id)
     // Here you would open workflow configuration
+  }
+
+  const checkWorkflowStatus = async (workflowId: string, executionId: string) => {
+    try {
+      const response = await fetch(`/api/workflows/${workflowId}/status/${executionId}`)
+      
+      if (!response.ok) {
+        throw new Error(`Failed to check status: ${response.status}`)
+      }
+
+      const status = await response.json()
+      console.log('YAYA workflow status:', status)
+      
+      return status
+    } catch (error) {
+      console.error('Failed to check workflow status:', error)
+      throw error
+    }
   }
 
   const handleChatWorkflow = (id: string) => {
