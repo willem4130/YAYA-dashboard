@@ -168,7 +168,11 @@ export function WorkflowCard({
           {lastRun && (
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Last run: {lastRun.toLocaleDateString()}
+              Last run: {lastRun.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+              })}
             </div>
           )}
         </div>

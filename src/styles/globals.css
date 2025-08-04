@@ -1,42 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@300;400;500;600&display=swap');
+/* Using system fonts to avoid CSP issues */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* YAYA Brand Colors - Refined earthy palette */
-    --background: 30 8% 98%; /* Soft cream white */
-    --foreground: 25 20% 15%; /* Deep brown */
-    --card: 0 0% 100%;
-    --card-foreground: 25 20% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 20% 15%;
-    --primary: 25 20% 15%; /* YAYA deep brown */
-    --primary-foreground: 30 8% 98%;
-    --secondary: 25 12% 85%; /* Soft grey-brown */
-    --secondary-foreground: 25 20% 15%;
-    --muted: 25 8% 92%; /* Light neutral */
-    --muted-foreground: 25 10% 45%; /* Medium brown-grey */
-    --accent: 0 70% 50%; /* YAYA scarlet red accent */
-    --accent-foreground: 30 8% 98%;
+    /* YAYA Authentic Brand Colors - Exact brand DNA */
+    --background: 95 5% 95%; /* Warm cream rgb(243,241,238) */
+    --foreground: 25 20% 11%; /* Deep charcoal rgb(28,25,23) */
+    --card: 95 5% 98%; /* Slightly warmer white */
+    --card-foreground: 25 20% 11%;
+    --popover: 95 5% 98%;
+    --popover-foreground: 25 20% 11%;
+    --primary: 33 28% 24%; /* Signature brown rgb(80,64,45) */
+    --primary-foreground: 95 5% 95%;
+    --secondary: 33 15% 80%; /* Soft brown-beige */
+    --secondary-foreground: 25 20% 11%;
+    --muted: 35 10% 90%; /* Warm neutral */
+    --muted-foreground: 33 15% 45%; /* Medium warm brown */
+    --accent: 0 65% 45%; /* Scarlet red for key actions */
+    --accent-foreground: 95 5% 95%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 25 8% 88%; /* Subtle brown border */
-    --input: 25 8% 88%;
-    --ring: 25 20% 15%;
-    --radius: 0.375rem; /* More subtle corners */
-    
-    /* YAYA Seasonal Colors */
-    --yaya-spring: 142 76% 36%; /* Soft sage green */
-    --yaya-summer: 43 74% 66%; /* Warm sand */
-    --yaya-autumn: 25 35% 55%; /* Rich camel */
-    --yaya-winter: 220 13% 18%; /* Deep charcoal */
-    
-    /* YAYA Material Colors */
-    --yaya-linen: 45 23% 93%; /* Natural linen */
-    --yaya-wool: 28 14% 85%; /* Soft wool */
-    --yaya-silk: 0 0% 98%; /* Pure silk */
+    --border: 35 8% 85%; /* Warm border */
+    --input: 35 8% 85%;
+    --ring: 33 28% 24%;
+    --radius: 0.25rem; /* Subtler corners for elegance */
+
+    /* YAYA Authentic Material Palette */
+    --yaya-charcoal: 25 20% 11%; /* Deep charcoal rgb(28,25,23) */
+    --yaya-cream: 95 5% 95%; /* Warm cream rgb(243,241,238) */
+    --yaya-brown: 33 28% 24%; /* Signature brown rgb(80,64,45) */
+    --yaya-scarlet: 0 65% 45%; /* Scarlet accent */
+
+    /* YAYA Natural Material Colors */
+    --yaya-linen: 45 15% 92%; /* Natural linen */
+    --yaya-wool: 35 12% 88%; /* Soft wool */
+    --yaya-silk: 95 5% 98%; /* Pure silk */
+    --yaya-cashmere: 40 8% 85%; /* Luxe cashmere */
   }
 
   .dark {
@@ -68,71 +69,334 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family:
+      'Helvetica Neue',
+      -apple-system,
+      BlinkMacSystemFont,
+      sans-serif;
     font-weight: 300;
   }
 }
 
 @layer components {
-  /* YAYA Typography Classes */
+  /* YAYA Authentic Typography Classes */
   .yaya-heading {
-    font-family: 'EB Garamond', serif;
+    font-family:
+      'Times New Roman', 'Times', 'serif', Georgia, 'Palatino Linotype', serif;
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
   }
-  
+
   .yaya-subheading {
-    font-family: 'Helvetica Neue', sans-serif;
+    font-family:
+      'Helvetica Neue',
+      'Helvetica',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Arial',
+      sans-serif;
     font-weight: 300;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-size: 0.85em;
   }
-  
+
   .yaya-body {
-    font-family: 'Helvetica Neue', sans-serif;
+    font-family:
+      'Helvetica Neue',
+      'Helvetica',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Arial',
+      sans-serif;
     font-weight: 300;
-    line-height: 1.6;
+    line-height: 1.7;
+    color: hsl(var(--muted-foreground));
   }
-  
+
   /* YAYA Button Styles */
   .yaya-button {
-    @apply rounded-sm font-light tracking-wide transition-all duration-300;
-    @apply hover:shadow-sm hover:translate-y-[-1px];
+    @apply rounded-sm font-light tracking-wide transition-all duration-500;
+    @apply hover:shadow-md hover:translate-y-[-1px];
+    @apply bg-primary text-primary-foreground;
+    @apply hover:bg-primary/90;
+    font-family:
+      'Helvetica Neue',
+      'Helvetica',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Arial',
+      sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.8em;
   }
-  
+
+  /* YAYA Header Button Styles - Fashion Magazine Premium */
+  .yaya-header-button {
+    @apply relative inline-flex items-center justify-center;
+    @apply px-5 py-2.5 rounded-sm border;
+    @apply font-light tracking-wide transition-none; /* GSAP handles transitions */
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2;
+    font-family:
+      'Helvetica Neue',
+      'Helvetica',
+      -apple-system,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Arial',
+      sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.75rem;
+    font-weight: 300;
+    min-height: 42px;
+    cursor: pointer;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px -4px rgba(80, 64, 45, 0.15);
+  }
+
+  .yaya-header-button-primary {
+    @apply bg-primary text-primary-foreground border-primary/20;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary) / 0.95) 50%,
+      hsl(var(--primary) / 0.9) 100%
+    );
+    position: relative;
+  }
+
+  .yaya-header-button-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(0, 0, 0, 0.05) 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  .yaya-header-button-secondary {
+    @apply bg-card/80 text-foreground border-border/40;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--card) / 0.9) 0%,
+      hsl(var(--card) / 0.7) 50%,
+      hsl(var(--muted) / 0.6) 100%
+    );
+    position: relative;
+  }
+
+  .yaya-header-button-secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      transparent 50%,
+      rgba(80, 64, 45, 0.03) 100%
+    );
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Fashion Magazine Typography Enhancement */
+  .yaya-header-button .yaya-subheading {
+    @apply relative z-10;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Icon enhancement within header buttons */
+  .yaya-header-button svg {
+    @apply relative z-10;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  }
+
   /* YAYA Card Styles */
   .yaya-card {
-    @apply border-0 shadow-sm hover:shadow-md transition-all duration-300;
-    @apply bg-gradient-to-b from-background to-muted/20;
-    backdrop-filter: blur(8px);
+    @apply border-0 shadow-lg hover:shadow-xl transition-all duration-700;
+    @apply bg-gradient-to-br from-card via-card/95 to-muted/30;
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border));
   }
-  
+
+  /* YAYA Luxury Card Styles */
+  .yaya-luxury-card {
+    @apply border-0 shadow-2xl hover:shadow-2xl transition-all duration-700;
+    @apply bg-gradient-to-br from-white/90 via-white/70 to-white/40;
+    backdrop-filter: blur(16px);
+    border: 1px solid hsl(var(--yaya-brown) / 0.1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .yaya-luxury-card:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  }
+
+  .yaya-luxury-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--yaya-cream) / 0.1) 0%,
+      transparent 50%,
+      hsl(var(--yaya-brown) / 0.05) 100%
+    );
+    pointer-events: none;
+  }
+
   /* YAYA Texture Patterns */
   .yaya-texture {
-    background-image: 
-      radial-gradient(circle at 1px 1px, rgba(25,20,15,0.03) 1px, transparent 0);
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgba(25, 20, 15, 0.03) 1px,
+      transparent 0
+    );
     background-size: 20px 20px;
   }
-  
+
   .yaya-linen-texture {
-    background-image: 
-      linear-gradient(90deg, rgba(25,20,15,0.02) 50%, transparent 50%),
-      linear-gradient(rgba(25,20,15,0.02) 50%, transparent 50%);
+    background-image:
+      linear-gradient(90deg, rgba(25, 20, 15, 0.02) 50%, transparent 50%),
+      linear-gradient(rgba(25, 20, 15, 0.02) 50%, transparent 50%);
     background-size: 2px 2px;
   }
-  
+
   /* YAYA Seasonal Indicators */
-  .yaya-spring { color: hsl(var(--yaya-spring)); }
-  .yaya-summer { color: hsl(var(--yaya-summer)); }
-  .yaya-autumn { color: hsl(var(--yaya-autumn)); }
-  .yaya-winter { color: hsl(var(--yaya-winter)); }
-  
-  .yaya-spring-bg { background-color: hsl(var(--yaya-spring) / 0.1); }
-  .yaya-summer-bg { background-color: hsl(var(--yaya-summer) / 0.1); }
-  .yaya-autumn-bg { background-color: hsl(var(--yaya-autumn) / 0.1); }
-  .yaya-winter-bg { background-color: hsl(var(--yaya-winter) / 0.1); }
-  
-  /* YAYA Material Textures */
-  .yaya-linen-bg { background-color: hsl(var(--yaya-linen)); }
-  .yaya-wool-bg { background-color: hsl(var(--yaya-wool)); }
-  .yaya-silk-bg { background-color: hsl(var(--yaya-silk)); }
+  .yaya-spring {
+    color: hsl(var(--yaya-spring));
+  }
+  .yaya-summer {
+    color: hsl(var(--yaya-summer));
+  }
+  .yaya-autumn {
+    color: hsl(var(--yaya-autumn));
+  }
+  .yaya-winter {
+    color: hsl(var(--yaya-winter));
+  }
+
+  .yaya-spring-bg {
+    background-color: hsl(var(--yaya-spring) / 0.1);
+  }
+  .yaya-summer-bg {
+    background-color: hsl(var(--yaya-summer) / 0.1);
+  }
+  .yaya-autumn-bg {
+    background-color: hsl(var(--yaya-autumn) / 0.1);
+  }
+  .yaya-winter-bg {
+    background-color: hsl(var(--yaya-winter) / 0.1);
+  }
+
+  /* YAYA Authentic Material Textures */
+  .yaya-linen-bg {
+    background-color: hsl(var(--yaya-linen));
+    background-image:
+      linear-gradient(90deg, rgba(28, 25, 23, 0.015) 50%, transparent 50%),
+      linear-gradient(rgba(28, 25, 23, 0.015) 50%, transparent 50%);
+    background-size: 3px 3px;
+  }
+
+  .yaya-wool-bg {
+    background-color: hsl(var(--yaya-wool));
+    background-image: radial-gradient(
+      circle at 2px 2px,
+      rgba(28, 25, 23, 0.02) 1px,
+      transparent 0
+    );
+    background-size: 8px 8px;
+  }
+
+  .yaya-silk-bg {
+    background-color: hsl(var(--yaya-silk));
+    background-image:
+      linear-gradient(45deg, rgba(80, 64, 45, 0.01) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(80, 64, 45, 0.01) 25%, transparent 25%);
+    background-size: 12px 12px;
+  }
+
+  .yaya-cashmere-bg {
+    background-color: hsl(var(--yaya-cashmere));
+    background-image: radial-gradient(
+      ellipse at center,
+      rgba(28, 25, 23, 0.01) 20%,
+      transparent 40%
+    );
+    background-size: 15px 10px;
+  }
+
+  /* YAYA Authentic Color Classes */
+  .yaya-charcoal {
+    color: hsl(var(--yaya-charcoal));
+  }
+  .yaya-cream {
+    color: hsl(var(--yaya-cream));
+  }
+  .yaya-brown {
+    color: hsl(var(--yaya-brown));
+  }
+  .yaya-scarlet {
+    color: hsl(var(--yaya-scarlet));
+  }
+
+  .yaya-charcoal-bg {
+    background-color: hsl(var(--yaya-charcoal));
+  }
+  .yaya-cream-bg {
+    background-color: hsl(var(--yaya-cream));
+  }
+  .yaya-brown-bg {
+    background-color: hsl(var(--yaya-brown));
+  }
+  .yaya-scarlet-bg {
+    background-color: hsl(var(--yaya-scarlet));
+  }
+
+  /* YAYA Kalme Basis (Calm Foundation) Utilities */
+  .yaya-calm-spacing {
+    @apply p-8 space-y-6;
+  }
+  .yaya-graceful-transition {
+    @apply transition-all duration-700 ease-out;
+  }
+  .yaya-elegant-hover {
+    @apply hover:scale-[1.01] hover:shadow-xl;
+  }
+
+  /* GSAP Animation Utilities */
+  .transition-none {
+    transition: none !important;
+  }
+  .yaya-search-input {
+    transition: none !important;
+  }
+  .workflow-card {
+    transition: none !important;
+  }
 }
