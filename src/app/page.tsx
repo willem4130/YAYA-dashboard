@@ -14,6 +14,7 @@ import { YayaCreativeAssistantCard } from '@/components/ui/yaya-creative-assista
 import { YayaChatInterface } from '@/components/ui/yaya-chat-interface'
 import { WorkflowSettings } from '@/components/ui/workflow-settings'
 import { WorkflowResultDisplay } from '@/components/ui/workflow-result-display'
+import { WebhookConfigurationModal } from '@/components/ui/webhook-configuration-modal'
 import {
   Select,
   SelectContent,
@@ -30,6 +31,7 @@ import {
   Sparkles,
   Brain,
   Target,
+  Settings,
 } from 'lucide-react'
 
 // Test inputs for YAYA workflows
@@ -97,6 +99,9 @@ export default function HomePage() {
   const [settingsWorkflowId, setSettingsWorkflowId] = useState<string | null>(
     null
   )
+  const [webhookConfigWorkflowId, setWebhookConfigWorkflowId] = useState<string | null>(
+    null
+  )
   const [resultDisplay, setResultDisplay] = useState<{
     workflowId: string
     executionId: string
@@ -160,6 +165,7 @@ export default function HomePage() {
             department: 'creative',
             role: 'brand-manager',
           },
+          useConfiguration: true, // Enable webhook configuration
         }),
       })
 
@@ -192,6 +198,11 @@ export default function HomePage() {
     setSettingsWorkflowId(id)
   }
 
+  const handleConfigureWebhook = (id: string) => {
+    console.log('Configuring webhook:', id)
+    setWebhookConfigWorkflowId(id)
+  }
+
   const handleChatWorkflow = (id: string) => {
     const workflow = yayaWorkflows.find(w => w.id === id)
     if (workflow) {
@@ -207,6 +218,10 @@ export default function HomePage() {
     setSettingsWorkflowId(null)
   }
 
+  const handleCloseWebhookConfig = () => {
+    setWebhookConfigWorkflowId(null)
+  }
+
   const handleCloseResultDisplay = () => {
     setResultDisplay(null)
   }
@@ -214,6 +229,12 @@ export default function HomePage() {
   const handleSaveWorkflowConfig = (config: any) => {
     console.log('Saving workflow configuration:', config)
     // Configuration is automatically saved to localStorage by the WorkflowSettings component
+    // Here you could also sync to a backend database if needed
+  }
+
+  const handleSaveWebhookConfig = (config: any) => {
+    console.log('Saving webhook configuration:', config)
+    // Configuration is automatically saved to localStorage by the WebhookConfigurationService
     // Here you could also sync to a backend database if needed
   }
 
@@ -262,12 +283,12 @@ export default function HomePage() {
                 onMouseLeave={() => animateHeaderButton(debugButtonRef, false)}
                 onClick={() => {
                   animateHeaderButtonPress(debugButtonRef)
-                  window.location.href = '/debug'
+                  handleConfigureWebhook('yaya-creative-assistant')
                 }}
                 data-animate="header-button"
               >
-                <Brain className="w-3.5 h-3.5 mr-2.5 transition-transform duration-300 group-hover:rotate-6" />
-                <span className="yaya-subheading">Test Workflow</span>
+                <Settings className="w-3.5 h-3.5 mr-2.5 transition-transform duration-300 group-hover:rotate-12" />
+                <span className="yaya-subheading">Webhook Config</span>
               </button>
 
               <button
@@ -424,6 +445,16 @@ export default function HomePage() {
           workflowTitle={resultDisplay.workflowTitle}
           isOpen={!!resultDisplay}
           onClose={handleCloseResultDisplay}
+        />
+      )}
+
+      {/* Webhook Configuration Modal */}
+      {webhookConfigWorkflowId && (
+        <WebhookConfigurationModal
+          isOpen={!!webhookConfigWorkflowId}
+          onClose={handleCloseWebhookConfig}
+          workflowId={webhookConfigWorkflowId}
+          onSave={handleSaveWebhookConfig}
         />
       )}
     </main>

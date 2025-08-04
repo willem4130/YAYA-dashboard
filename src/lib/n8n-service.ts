@@ -4,6 +4,10 @@ import {
   shouldUseMockService,
   MockN8nService,
 } from './mock-n8n-service'
+import {
+  WebhookConfiguration,
+  webhookConfigService,
+} from './webhook-configuration'
 
 // n8n API Response Types
 export interface N8nExecution {
@@ -66,30 +70,36 @@ export class N8nService {
     this.config = N8nConfigSchema.parse(config)
   }
 
-  // Execute workflow via webhook
+  // Execute workflow via webhook with optional configuration
   async executeWorkflowWebhook(
     webhookId: string,
     payload: Record<string, any>,
-    options: { timeout?: number; waitForCompletion?: boolean } = {}
+    options: {
+      timeout?: number
+      waitForCompletion?: boolean
+      workflowId?: string
+      useConfiguration?: boolean
+    } = {}
   ): Promise<{ executionId: string; data?: any }> {
-    // Use full webhook URL directly for YAYA Creative Assistant
-    const url = webhookId.startsWith('http')
-      ? webhookId
-      : `${this.config.webhookBaseUrl}/${webhookId}`
+    const { processedPayload, webhookConfig } = this.prepareWebhookPayload(
+      payload,
+      options
+    )
+    const url = this.buildWebhookUrl(webhookId, webhookConfig)
+    const headers = this.buildWebhookHeaders(webhookConfig)
+    const method = webhookConfig?.n8nSettings.method || 'POST'
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.config.apiKey}`,
-        },
+        method,
+        headers,
         body: JSON.stringify({
-          ...payload,
+          ...processedPayload,
           _yaYaMetadata: {
             source: 'yaya-atelier',
             timestamp: new Date().toISOString(),
             timeout: options.timeout || 300000,
+            configVersion: webhookConfig?.metadata.version,
           },
         }),
       })
@@ -100,9 +110,10 @@ export class N8nService {
         )
       }
 
-      const result = await response.json()
-
-      // Extract execution ID from response (format may vary)
+      const result = await this.processWebhookResponse(
+        await response.json(),
+        webhookConfig
+      )
       const executionId =
         result.executionId || result.id || this.generateExecutionId()
 
@@ -112,8 +123,126 @@ export class N8nService {
       }
     } catch (error) {
       console.error('n8n webhook execution failed:', error)
-      throw new Error(`Failed to execute n8n workflow: ${error.message}`)
+      throw new Error(
+        `Failed to execute n8n workflow: ${error instanceof Error ? error.message : 'Unknown error'}`
+      )
     }
+  }
+
+  // Helper: Prepare webhook payload with configuration
+  private prepareWebhookPayload(
+    payload: Record<string, any>,
+    options: { useConfiguration?: boolean; workflowId?: string }
+  ): {
+    processedPayload: Record<string, any>
+    webhookConfig: WebhookConfiguration | null
+  } {
+    let processedPayload = payload
+    let webhookConfig: WebhookConfiguration | null = null
+
+    if (options.useConfiguration && options.workflowId) {
+      webhookConfig = webhookConfigService.getConfiguration(options.workflowId)
+      if (webhookConfig) {
+        try {
+          processedPayload = webhookConfigService.applyInputMappings(
+            payload,
+            webhookConfig
+          )
+        } catch (error) {
+          console.warn('Failed to apply input mappings:', error)
+        }
+      }
+    }
+
+    return { processedPayload, webhookConfig }
+  }
+
+  // Helper: Build webhook URL
+  private buildWebhookUrl(
+    webhookId: string,
+    webhookConfig: WebhookConfiguration | null
+  ): string {
+    return (
+      webhookConfig?.n8nSettings.webhookUrl ||
+      (webhookId.startsWith('http')
+        ? webhookId
+        : `${this.config.webhookBaseUrl}/${webhookId}`)
+    )
+  }
+
+  // Helper: Build webhook headers
+  private buildWebhookHeaders(
+    webhookConfig: WebhookConfiguration | null
+  ): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+
+    this.addAuthenticationHeaders(headers, webhookConfig)
+
+    if (webhookConfig?.n8nSettings.headers) {
+      Object.assign(headers, webhookConfig.n8nSettings.headers)
+    }
+
+    return headers
+  }
+
+  // Helper: Add authentication headers
+  private addAuthenticationHeaders(
+    headers: Record<string, string>,
+    webhookConfig: WebhookConfiguration | null
+  ): void {
+    if (webhookConfig?.n8nSettings.authentication) {
+      const auth = webhookConfig.n8nSettings.authentication
+      switch (auth.type) {
+        case 'bearer':
+          if (auth.token) {
+            headers.Authorization = `Bearer ${auth.token}`
+          }
+          break
+        case 'basic':
+          if (auth.username && auth.password) {
+            const credentials = btoa(`${auth.username}:${auth.password}`)
+            headers.Authorization = `Basic ${credentials}`
+          }
+          break
+        case 'custom':
+          if (auth.customHeaders) {
+            Object.assign(headers, auth.customHeaders)
+          }
+          break
+        default:
+          headers.Authorization = `Bearer ${this.config.apiKey}`
+      }
+    } else {
+      headers.Authorization = `Bearer ${this.config.apiKey}`
+    }
+  }
+
+  // Helper: Process webhook response
+  private async processWebhookResponse(
+    result: any,
+    webhookConfig: WebhookConfiguration | null
+  ): Promise<any> {
+    if (webhookConfig) {
+      try {
+        const statusCheck = webhookConfigService.checkResponseStatus(
+          result,
+          webhookConfig
+        )
+        if (!statusCheck.success && statusCheck.error) {
+          throw new Error(`Webhook execution failed: ${statusCheck.error}`)
+        }
+
+        return webhookConfigService.applyOutputMappings(
+          statusCheck.resultData || result,
+          webhookConfig
+        )
+      } catch (error) {
+        console.warn('Failed to apply output mappings:', error)
+      }
+    }
+    return result
   }
 
   // Get execution status
