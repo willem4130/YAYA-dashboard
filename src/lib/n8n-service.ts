@@ -8,6 +8,7 @@ import {
   WebhookConfiguration,
   webhookConfigService,
 } from './webhook-configuration'
+import { webhookMonitor } from './webhook-monitoring'
 
 // n8n API Response Types
 export interface N8nExecution {
@@ -81,6 +82,16 @@ export class N8nService {
       useConfiguration?: boolean
     } = {}
   ): Promise<{ executionId: string; data?: any }> {
+    const correlationId = `exec-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
+    const workflowId = options.workflowId || 'unknown'
+
+    // Start monitoring
+    const tracker = webhookMonitor.startExecution(
+      workflowId,
+      webhookId,
+      correlationId
+    )
+
     const { processedPayload, webhookConfig } = this.prepareWebhookPayload(
       payload,
       options
@@ -89,33 +100,59 @@ export class N8nService {
     const headers = this.buildWebhookHeaders(webhookConfig)
     const method = webhookConfig?.n8nSettings.method || 'POST'
 
+    // Log input mapping if configuration was used
+    if (webhookConfig && options.useConfiguration) {
+      tracker.logMapping('input', payload, processedPayload)
+    }
+
+    const requestPayload = {
+      ...processedPayload,
+      _yaYaMetadata: {
+        source: 'yaya-atelier',
+        timestamp: new Date().toISOString(),
+        timeout: options.timeout || 300000,
+        configVersion: webhookConfig?.metadata.version,
+        correlationId,
+      },
+    }
+
     try {
-      const response = await fetch(url, {
+      const { response, responseData } = await this.executeHttpRequest(
+        url,
         method,
         headers,
-        body: JSON.stringify({
-          ...processedPayload,
-          _yaYaMetadata: {
-            source: 'yaya-atelier',
-            timestamp: new Date().toISOString(),
-            timeout: options.timeout || 300000,
-            configVersion: webhookConfig?.metadata.version,
-          },
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(
-          `n8n webhook failed: ${response.status} ${response.statusText}`
-        )
-      }
+        requestPayload,
+        tracker
+      )
 
       const result = await this.processWebhookResponse(
-        await response.json(),
+        responseData,
         webhookConfig
       )
+
+      // Log output mapping if configuration was used
+      if (webhookConfig && options.useConfiguration) {
+        tracker.logMapping('output', responseData, result)
+      }
+
       const executionId =
         result.executionId || result.id || this.generateExecutionId()
+
+      // Log successful completion
+      this.logWebhookSuccess({
+        tracker,
+        url,
+        method,
+        headers,
+        requestPayload,
+        response,
+        responseData,
+        payload,
+        processedPayload,
+        result,
+        webhookConfig,
+        options,
+      })
 
       return {
         executionId,
@@ -123,10 +160,133 @@ export class N8nService {
       }
     } catch (error) {
       console.error('n8n webhook execution failed:', error)
+
+      // Log failure if not already logged
+      if (
+        error instanceof Error &&
+        !error.message.includes('webhook failed:')
+      ) {
+        tracker.logFailure(error, {
+          url,
+          method,
+          headers,
+          body: requestPayload,
+          size: JSON.stringify(requestPayload).length,
+        })
+      }
+
       throw new Error(
         `Failed to execute n8n workflow: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
     }
+  }
+
+  // Helper: Execute HTTP request and handle response
+  private async executeHttpRequest(
+    url: string,
+    method: string,
+    headers: Record<string, string>,
+    requestPayload: Record<string, any>,
+    tracker: any
+  ): Promise<{ response: Response; responseData: any }> {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: JSON.stringify(requestPayload),
+    })
+
+    if (!response.ok) {
+      const error = new Error(
+        `n8n webhook failed: ${response.status} ${response.statusText}`
+      )
+      tracker.logFailure(
+        error,
+        {
+          url,
+          method,
+          headers,
+          body: requestPayload,
+          size: JSON.stringify(requestPayload).length,
+        },
+        {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: null,
+          size: 0,
+        }
+      )
+      throw error
+    }
+
+    const responseData = await response.json()
+    return { response, responseData }
+  }
+
+  // Helper: Log successful webhook execution
+  private logWebhookSuccess(params: {
+    tracker: any
+    url: string
+    method: string
+    headers: Record<string, string>
+    requestPayload: Record<string, any>
+    response: Response
+    responseData: any
+    payload: Record<string, any>
+    processedPayload: Record<string, any>
+    result: any
+    webhookConfig: WebhookConfiguration | null
+    options: { useConfiguration?: boolean }
+  }): void {
+    const {
+      tracker,
+      url,
+      method,
+      headers,
+      requestPayload,
+      response,
+      responseData,
+      payload,
+      processedPayload,
+      result,
+      webhookConfig,
+      options,
+    } = params
+
+    tracker.logSuccess(
+      {
+        url,
+        method,
+        headers,
+        body: requestPayload,
+        size: JSON.stringify(requestPayload).length,
+      },
+      {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: responseData,
+        size: JSON.stringify(responseData).length,
+      },
+      {
+        inputMapping:
+          webhookConfig && options.useConfiguration
+            ? {
+                original: payload,
+                transformed: processedPayload,
+                mappingsApplied: webhookConfig.inputMappings.length,
+              }
+            : undefined,
+        outputMapping:
+          webhookConfig && options.useConfiguration
+            ? {
+                original: responseData,
+                transformed: result,
+                mappingsApplied: webhookConfig.outputMappings.length,
+              }
+            : undefined,
+      }
+    )
   }
 
   // Helper: Prepare webhook payload with configuration

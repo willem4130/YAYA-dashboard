@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 
 interface FileMetadata {
   id: string
@@ -19,14 +18,11 @@ export async function GET(
 ) {
   try {
     const fileId = params.fileId
-    
+
     // Get file metadata
     const metadata = await getFileMetadata(fileId)
     if (!metadata) {
-      return NextResponse.json(
-        { error: 'File not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
     // Check if request is for download vs preview
@@ -41,8 +37,8 @@ export async function GET(
         headers: {
           'Content-Type': metadata.mimeType,
           'Content-Length': thumbnailData.size.toString(),
-          'Cache-Control': 'public, max-age=31536000, immutable'
-        }
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
       })
     }
 
@@ -61,16 +57,17 @@ export async function GET(
     }
 
     if (download) {
-      responseHeaders['Content-Disposition'] = `attachment; filename="${metadata.filename}"`
+      responseHeaders['Content-Disposition'] =
+        `attachment; filename="${metadata.filename}"`
     } else {
-      responseHeaders['Content-Disposition'] = `inline; filename="${metadata.filename}"`
+      responseHeaders['Content-Disposition'] =
+        `inline; filename="${metadata.filename}"`
       responseHeaders['Cache-Control'] = 'public, max-age=3600' // 1 hour cache for preview
     }
 
     return new NextResponse(fileData, {
-      headers: responseHeaders
+      headers: responseHeaders,
     })
-
   } catch (error) {
     console.error('File retrieval error:', error)
     return NextResponse.json(
@@ -86,27 +83,23 @@ export async function DELETE(
 ) {
   try {
     const fileId = params.fileId
-    
+
     // Check if file exists
     const metadata = await getFileMetadata(fileId)
     if (!metadata) {
-      return NextResponse.json(
-        { error: 'File not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
     // Delete from storage
     await deleteFileFromStorage(fileId)
-    
+
     // Delete metadata
     await deleteFileMetadata(fileId)
 
     return NextResponse.json({
       success: true,
-      message: 'File deleted successfully'
+      message: 'File deleted successfully',
     })
-
   } catch (error) {
     console.error('File deletion error:', error)
     return NextResponse.json(
@@ -123,27 +116,23 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File
     const workflowId = formData.get('workflowId') as string
     const executionId = formData.get('executionId') as string
-    const tags = formData.get('tags')?.toString().split(',') || []
+    const tagsValue = formData.get('tags')
+    const tags =
+      tagsValue && typeof tagsValue === 'string' ? tagsValue.split(',') : []
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
     // Validate file type and size
     const validation = validateFile(file)
     if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
     // Generate unique file ID
     const fileId = generateFileId(file.name)
-    
+
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer()
     const buffer = Buffer.from(arrayBuffer)
@@ -160,19 +149,21 @@ export async function POST(request: NextRequest) {
       uploadedAt: new Date(),
       workflowId,
       executionId,
-      tags
+      tags,
     }
     await storeFileMetadata(metadata)
 
-    return NextResponse.json({
-      success: true,
-      fileId,
-      filename: file.name,
-      size: file.size,
-      mimeType: file.type,
-      url: `/api/files/${fileId}`
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        success: true,
+        fileId,
+        filename: file.name,
+        size: file.size,
+        mimeType: file.type,
+        url: `/api/files/${fileId}`,
+      },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('File upload error:', error)
     return NextResponse.json(
@@ -185,10 +176,18 @@ export async function POST(request: NextRequest) {
 function validateFile(file: File): { isValid: boolean; error?: string } {
   const maxSize = 50 * 1024 * 1024 // 50MB
   const allowedTypes = [
-    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
-    'video/mp4', 'video/quicktime', 'video/webm',
-    'application/pdf', 'text/plain', 'text/csv',
-    'application/json', 'application/zip'
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'video/mp4',
+    'video/quicktime',
+    'video/webm',
+    'application/pdf',
+    'text/plain',
+    'text/csv',
+    'application/json',
+    'application/zip',
   ]
 
   if (file.size > maxSize) {
@@ -204,7 +203,7 @@ function validateFile(file: File): { isValid: boolean; error?: string } {
 
 function generateFileId(filename: string): string {
   const timestamp = Date.now()
-  const random = Math.random().toString(36).substr(2, 9)
+  const random = Math.random().toString(36).substring(2, 11)
   const extension = filename.split('.').pop()
   return `${timestamp}-${random}.${extension}`
 }
@@ -219,27 +218,34 @@ async function getFileMetadata(fileId: string): Promise<FileMetadata | null> {
     size: 1024000,
     uploadedAt: new Date(),
     workflowId: 'social-content-gen',
-    tags: ['generated', 'social-media']
+    tags: ['generated', 'social-media'],
   }
 }
 
-async function getFileFromStorage(fileId: string): Promise<Buffer | null> {
+async function getFileFromStorage(_fileId: string): Promise<Buffer | null> {
   // In a real implementation, this would fetch from your storage service
   // For now, return a small mock image buffer
   return Buffer.from('mock-file-data')
 }
 
-async function generateThumbnail(fileId: string, metadata: FileMetadata): Promise<{ buffer: Buffer; size: number }> {
+async function generateThumbnail(
+  _fileId: string,
+  _metadata: FileMetadata
+): Promise<{ buffer: Buffer; size: number }> {
   // In a real implementation, this would generate thumbnails using Sharp or similar
   // For now, return mock thumbnail
   const mockThumbnail = Buffer.from('mock-thumbnail-data')
   return {
     buffer: mockThumbnail,
-    size: mockThumbnail.length
+    size: mockThumbnail.length,
   }
 }
 
-async function storeFileInStorage(fileId: string, buffer: Buffer, mimeType: string): Promise<void> {
+async function storeFileInStorage(
+  fileId: string,
+  buffer: Buffer,
+  mimeType: string
+): Promise<void> {
   // In a real implementation, this would upload to your storage service (S3, R2, etc.)
   console.log(`Storing file ${fileId} (${buffer.length} bytes, ${mimeType})`)
 }

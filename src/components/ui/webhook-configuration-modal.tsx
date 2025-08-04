@@ -360,10 +360,10 @@ export function WebhookConfigurationModal({
                       <div className="col-span-2">
                         <Label className="text-xs yaya-subheading">Transform</Label>
                         <Select
-                          value={mapping.transform || ''}
+                          value={mapping.transform || 'none'}
                           onValueChange={(value) =>
                             updateInputMapping(index, {
-                              transform: value as any || undefined,
+                              transform: value === 'none' ? undefined : value as any,
                             })
                           }
                         >
@@ -371,7 +371,7 @@ export function WebhookConfigurationModal({
                             <SelectValue placeholder="None" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {transformOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}
@@ -463,10 +463,10 @@ export function WebhookConfigurationModal({
                       <div className="col-span-2">
                         <Label className="text-xs yaya-subheading">Transform</Label>
                         <Select
-                          value={mapping.transform || ''}
+                          value={mapping.transform || 'none'}
                           onValueChange={(value) =>
                             updateOutputMapping(index, {
-                              transform: value as any || undefined,
+                              transform: value === 'none' ? undefined : value as any,
                             })
                           }
                         >
@@ -474,7 +474,7 @@ export function WebhookConfigurationModal({
                             <SelectValue placeholder="None" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {transformOptions.map((option) => (
                               <SelectItem key={option.value} value={option.value}>
                                 {option.label}

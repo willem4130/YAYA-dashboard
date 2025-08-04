@@ -163,8 +163,8 @@ export const FieldTransforms = {
 export class WebhookConfigurationService {
   private readonly storageKey = 'yaya-webhook-configurations'
 
-  // Save configuration to localStorage
-  saveConfiguration(config: WebhookConfiguration): void {
+  // Save configuration (with API fallback)
+  async saveConfiguration(config: WebhookConfiguration): Promise<void> {
     const validation = WebhookConfigurationSchema.safeParse(config)
     if (!validation.success) {
       throw new Error(
@@ -172,6 +172,29 @@ export class WebhookConfigurationService {
       )
     }
 
+    try {
+      // Try to save to API first
+      const response = await fetch('/api/webhook-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      })
+
+      if (response.ok) {
+        // Also save to localStorage as backup
+        this.saveToLocalStorage(config)
+        return
+      }
+    } catch (error) {
+      console.warn('API save failed, falling back to localStorage:', error)
+    }
+
+    // Fallback to localStorage
+    this.saveToLocalStorage(config)
+  }
+
+  // Save to localStorage (internal method)
+  private saveToLocalStorage(config: WebhookConfiguration): void {
     const configurations = this.getAllConfigurations()
     const existingIndex = configurations.findIndex(
       c => c.workflowId === config.workflowId
