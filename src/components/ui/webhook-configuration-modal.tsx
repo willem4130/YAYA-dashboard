@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { z } from 'zod'
 import {
   Dialog,
   DialogContent,
@@ -20,29 +19,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import {
   Plus,
-  Minus,
   Settings,
   ArrowRight,
   ArrowLeft,
   Zap,
-  Shield,
   MapPin,
   Trash2,
-  Copy,
 } from 'lucide-react'
 import {
   WebhookConfiguration,
   WebhookFieldMapping,
   webhookConfigService,
   DEFAULT_WEBHOOK_CONFIGURATIONS,
-  FieldTransforms,
 } from '@/lib/webhook-configuration'
 import { YAYA_WORKFLOWS } from '@/lib/yaya-workflows'
 
@@ -53,13 +53,20 @@ interface WebhookConfigurationModalProps {
   onSave: (config: WebhookConfiguration) => void
 }
 
+type TransformType =
+  | 'lowercase'
+  | 'uppercase'
+  | 'camelCase'
+  | 'snake_case'
+  | 'kebab-case'
+
 const transformOptions = [
   { value: 'lowercase', label: 'lowercase' },
   { value: 'uppercase', label: 'UPPERCASE' },
   { value: 'camelCase', label: 'camelCase' },
   { value: 'snake_case', label: 'snake_case' },
   { value: 'kebab-case', label: 'kebab-case' },
-]
+] as const
 
 export function WebhookConfigurationModal({
   isOpen,
@@ -78,7 +85,7 @@ export function WebhookConfigurationModal({
   useEffect(() => {
     if (isOpen && workflowId) {
       const existingConfig = webhookConfigService.getConfiguration(workflowId)
-      
+
       if (existingConfig) {
         setConfig(existingConfig)
       } else {
@@ -124,7 +131,9 @@ export function WebhookConfigurationModal({
       onSave(config)
       onClose()
     } catch (error) {
-      setErrors({ general: error instanceof Error ? error.message : 'Save failed' })
+      setErrors({
+        general: error instanceof Error ? error.message : 'Save failed',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -149,7 +158,10 @@ export function WebhookConfigurationModal({
     })
   }
 
-  const updateInputMapping = (index: number, mapping: Partial<WebhookFieldMapping>) => {
+  const updateInputMapping = (
+    index: number,
+    mapping: Partial<WebhookFieldMapping>
+  ) => {
     if (!config) return
     const newMappings = [...config.inputMappings]
     newMappings[index] = { ...newMappings[index], ...mapping }
@@ -175,7 +187,10 @@ export function WebhookConfigurationModal({
     })
   }
 
-  const updateOutputMapping = (index: number, mapping: Partial<WebhookFieldMapping>) => {
+  const updateOutputMapping = (
+    index: number,
+    mapping: Partial<WebhookFieldMapping>
+  ) => {
     if (!config) return
     const newMappings = [...config.outputMappings]
     newMappings[index] = { ...newMappings[index], ...mapping }
@@ -228,23 +243,32 @@ export function WebhookConfigurationModal({
             <TabsContent value="basic" className="space-y-6 mt-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="yaya-subheading">Configuration Name</Label>
+                  <Label htmlFor="name" className="yaya-subheading">
+                    Configuration Name
+                  </Label>
                   <Input
                     id="name"
                     value={config.name}
-                    onChange={(e) => setConfig({ ...config, name: e.target.value })}
+                    onChange={e =>
+                      setConfig({ ...config, name: e.target.value })
+                    }
                     placeholder="Enter configuration name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="webhook-url" className="yaya-subheading">Webhook URL</Label>
+                  <Label htmlFor="webhook-url" className="yaya-subheading">
+                    Webhook URL
+                  </Label>
                   <Input
                     id="webhook-url"
                     value={config.n8nSettings.webhookUrl}
-                    onChange={(e) =>
+                    onChange={e =>
                       setConfig({
                         ...config,
-                        n8nSettings: { ...config.n8nSettings, webhookUrl: e.target.value },
+                        n8nSettings: {
+                          ...config.n8nSettings,
+                          webhookUrl: e.target.value,
+                        },
                       })
                     }
                     placeholder="https://your-n8n-instance.com/webhook/..."
@@ -253,11 +277,15 @@ export function WebhookConfigurationModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description" className="yaya-subheading">Description</Label>
+                <Label htmlFor="description" className="yaya-subheading">
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={config.description}
-                  onChange={(e) => setConfig({ ...config, description: e.target.value })}
+                  onChange={e =>
+                    setConfig({ ...config, description: e.target.value })
+                  }
                   placeholder="Describe this webhook configuration"
                   rows={3}
                 />
@@ -265,7 +293,9 @@ export function WebhookConfigurationModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="method" className="yaya-subheading">HTTP Method</Label>
+                  <Label htmlFor="method" className="yaya-subheading">
+                    HTTP Method
+                  </Label>
                   <Select
                     value={config.n8nSettings.method}
                     onValueChange={(value: 'POST' | 'GET' | 'PUT' | 'PATCH') =>
@@ -287,15 +317,22 @@ export function WebhookConfigurationModal({
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="auth-type" className="yaya-subheading">Authentication</Label>
+                  <Label htmlFor="auth-type" className="yaya-subheading">
+                    Authentication
+                  </Label>
                   <Select
                     value={config.n8nSettings.authentication?.type || 'none'}
-                    onValueChange={(value: 'none' | 'bearer' | 'basic' | 'custom') =>
+                    onValueChange={(
+                      value: 'none' | 'bearer' | 'basic' | 'custom'
+                    ) =>
                       setConfig({
                         ...config,
                         n8nSettings: {
                           ...config.n8nSettings,
-                          authentication: { ...config.n8nSettings.authentication, type: value },
+                          authentication: {
+                            ...config.n8nSettings.authentication,
+                            type: value,
+                          },
                         },
                       })
                     }
@@ -312,6 +349,46 @@ export function WebhookConfigurationModal({
                   </Select>
                 </div>
               </div>
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  onClick={async () => {
+                    setIsLoading(true)
+                    try {
+                      // Use our API endpoint to proxy the webhook test to avoid CORS
+                      const response = await fetch('/api/webhook-test', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          webhookUrl: config.n8nSettings.webhookUrl,
+                          method: config.n8nSettings.method,
+                          testPayload: { test: true, timestamp: new Date().toISOString() },
+                        }),
+                      })
+                      
+                      const result = await response.json()
+                      
+                      if (response.ok && result.success) {
+                        alert(`Webhook test successful! Status: ${result.status}`)
+                      } else {
+                        alert(`Webhook test failed: ${result.error || 'Unknown error'}`)
+                      }
+                    } catch (error) {
+                      alert(`Webhook test failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                    } finally {
+                      setIsLoading(false)
+                    }
+                  }}
+                  disabled={isLoading || !config.n8nSettings.webhookUrl}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  {isLoading ? 'Testing...' : 'Run Test'}
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="input" className="space-y-6 mt-6">
@@ -322,7 +399,11 @@ export function WebhookConfigurationModal({
                     Map YAYA fields to n8n webhook fields
                   </p>
                 </div>
-                <Button onClick={addInputMapping} size="sm" className="yaya-button">
+                <Button
+                  onClick={addInputMapping}
+                  size="sm"
+                  className="yaya-button"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Mapping
                 </Button>
@@ -333,11 +414,15 @@ export function WebhookConfigurationModal({
                   <Card key={index} className="p-4">
                     <div className="grid grid-cols-12 gap-3 items-center">
                       <div className="col-span-3">
-                        <Label className="text-xs yaya-subheading">YAYA Field</Label>
+                        <Label className="text-xs yaya-subheading">
+                          YAYA Field
+                        </Label>
                         <Input
                           value={mapping.sourceField}
-                          onChange={(e) =>
-                            updateInputMapping(index, { sourceField: e.target.value })
+                          onChange={e =>
+                            updateInputMapping(index, {
+                              sourceField: e.target.value,
+                            })
                           }
                           placeholder="sourceField"
                           size="sm"
@@ -347,23 +432,32 @@ export function WebhookConfigurationModal({
                         <ArrowRight className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs yaya-subheading">n8n Field</Label>
+                        <Label className="text-xs yaya-subheading">
+                          n8n Field
+                        </Label>
                         <Input
                           value={mapping.targetField}
-                          onChange={(e) =>
-                            updateInputMapping(index, { targetField: e.target.value })
+                          onChange={e =>
+                            updateInputMapping(index, {
+                              targetField: e.target.value,
+                            })
                           }
                           placeholder="targetField"
                           size="sm"
                         />
                       </div>
                       <div className="col-span-2">
-                        <Label className="text-xs yaya-subheading">Transform</Label>
+                        <Label className="text-xs yaya-subheading">
+                          Transform
+                        </Label>
                         <Select
                           value={mapping.transform || 'none'}
-                          onValueChange={(value) =>
+                          onValueChange={value =>
                             updateInputMapping(index, {
-                              transform: value === 'none' ? undefined : value as any,
+                              transform:
+                                value === 'none'
+                                  ? undefined
+                                  : (value as TransformType),
                             })
                           }
                         >
@@ -372,8 +466,11 @@ export function WebhookConfigurationModal({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
-                            {transformOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                            {transformOptions.map(option => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -385,11 +482,14 @@ export function WebhookConfigurationModal({
                           <Switch
                             id={`required-${index}`}
                             checked={mapping.required || false}
-                            onCheckedChange={(checked) =>
+                            onCheckedChange={checked =>
                               updateInputMapping(index, { required: checked })
                             }
                           />
-                          <Label htmlFor={`required-${index}`} className="text-xs">
+                          <Label
+                            htmlFor={`required-${index}`}
+                            className="text-xs"
+                          >
                             Required
                           </Label>
                         </div>
@@ -411,7 +511,9 @@ export function WebhookConfigurationModal({
                   <div className="text-center py-8 text-muted-foreground">
                     <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="yaya-body">No input mappings configured</p>
-                    <p className="text-sm">Add mappings to transform YAYA data for n8n</p>
+                    <p className="text-sm">
+                      Add mappings to transform YAYA data for n8n
+                    </p>
                   </div>
                 )}
               </div>
@@ -420,12 +522,18 @@ export function WebhookConfigurationModal({
             <TabsContent value="output" className="space-y-6 mt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg yaya-heading">Output Field Mappings</h3>
+                  <h3 className="text-lg yaya-heading">
+                    Output Field Mappings
+                  </h3>
                   <p className="text-sm text-muted-foreground yaya-body">
                     Map n8n response fields to YAYA format
                   </p>
                 </div>
-                <Button onClick={addOutputMapping} size="sm" className="yaya-button">
+                <Button
+                  onClick={addOutputMapping}
+                  size="sm"
+                  className="yaya-button"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Mapping
                 </Button>
@@ -436,11 +544,15 @@ export function WebhookConfigurationModal({
                   <Card key={index} className="p-4">
                     <div className="grid grid-cols-12 gap-3 items-center">
                       <div className="col-span-3">
-                        <Label className="text-xs yaya-subheading">n8n Field</Label>
+                        <Label className="text-xs yaya-subheading">
+                          n8n Field
+                        </Label>
                         <Input
                           value={mapping.sourceField}
-                          onChange={(e) =>
-                            updateOutputMapping(index, { sourceField: e.target.value })
+                          onChange={e =>
+                            updateOutputMapping(index, {
+                              sourceField: e.target.value,
+                            })
                           }
                           placeholder="response.field"
                           size="sm"
@@ -450,23 +562,32 @@ export function WebhookConfigurationModal({
                         <ArrowLeft className="w-4 h-4 text-muted-foreground" />
                       </div>
                       <div className="col-span-3">
-                        <Label className="text-xs yaya-subheading">YAYA Field</Label>
+                        <Label className="text-xs yaya-subheading">
+                          YAYA Field
+                        </Label>
                         <Input
                           value={mapping.targetField}
-                          onChange={(e) =>
-                            updateOutputMapping(index, { targetField: e.target.value })
+                          onChange={e =>
+                            updateOutputMapping(index, {
+                              targetField: e.target.value,
+                            })
                           }
                           placeholder="outputField"
                           size="sm"
                         />
                       </div>
                       <div className="col-span-2">
-                        <Label className="text-xs yaya-subheading">Transform</Label>
+                        <Label className="text-xs yaya-subheading">
+                          Transform
+                        </Label>
                         <Select
                           value={mapping.transform || 'none'}
-                          onValueChange={(value) =>
+                          onValueChange={value =>
                             updateOutputMapping(index, {
-                              transform: value === 'none' ? undefined : value as any,
+                              transform:
+                                value === 'none'
+                                  ? undefined
+                                  : (value as TransformType),
                             })
                           }
                         >
@@ -475,8 +596,11 @@ export function WebhookConfigurationModal({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
-                            {transformOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                            {transformOptions.map(option => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -486,8 +610,10 @@ export function WebhookConfigurationModal({
                       <div className="col-span-2">
                         <Input
                           value={mapping.defaultValue || ''}
-                          onChange={(e) =>
-                            updateOutputMapping(index, { defaultValue: e.target.value || undefined })
+                          onChange={e =>
+                            updateOutputMapping(index, {
+                              defaultValue: e.target.value || undefined,
+                            })
                           }
                           placeholder="Default value"
                           size="sm"
@@ -510,7 +636,9 @@ export function WebhookConfigurationModal({
                   <div className="text-center py-8 text-muted-foreground">
                     <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     <p className="yaya-body">No output mappings configured</p>
-                    <p className="text-sm">Add mappings to transform n8n responses for YAYA</p>
+                    <p className="text-sm">
+                      Add mappings to transform n8n responses for YAYA
+                    </p>
                   </div>
                 )}
               </div>
@@ -520,7 +648,9 @@ export function WebhookConfigurationModal({
               <div className="grid grid-cols-2 gap-6">
                 <Card className="p-4">
                   <CardHeader className="p-0 pb-4">
-                    <CardTitle className="text-lg yaya-heading">Input Wrapping</CardTitle>
+                    <CardTitle className="text-lg yaya-heading">
+                      Input Wrapping
+                    </CardTitle>
                     <CardDescription className="yaya-body">
                       Control how YAYA data is wrapped before sending to n8n
                     </CardDescription>
@@ -530,10 +660,13 @@ export function WebhookConfigurationModal({
                       <Switch
                         id="wrap-input"
                         checked={config.wrapInput?.enabled || false}
-                        onCheckedChange={(checked) =>
+                        onCheckedChange={checked =>
                           setConfig({
                             ...config,
-                            wrapInput: { ...config.wrapInput, enabled: checked },
+                            wrapInput: {
+                              ...config.wrapInput,
+                              enabled: checked,
+                            },
                           })
                         }
                       />
@@ -541,13 +674,18 @@ export function WebhookConfigurationModal({
                     </div>
                     {config.wrapInput?.enabled && (
                       <div className="space-y-2">
-                        <Label className="text-sm yaya-subheading">Root Key</Label>
+                        <Label className="text-sm yaya-subheading">
+                          Root Key
+                        </Label>
                         <Input
                           value={config.wrapInput.rootKey || ''}
-                          onChange={(e) =>
+                          onChange={e =>
                             setConfig({
                               ...config,
-                              wrapInput: { ...config.wrapInput, rootKey: e.target.value },
+                              wrapInput: {
+                                ...config.wrapInput,
+                                rootKey: e.target.value,
+                              },
                             })
                           }
                           placeholder="data"
@@ -559,7 +697,9 @@ export function WebhookConfigurationModal({
 
                 <Card className="p-4">
                   <CardHeader className="p-0 pb-4">
-                    <CardTitle className="text-lg yaya-heading">Output Unwrapping</CardTitle>
+                    <CardTitle className="text-lg yaya-heading">
+                      Output Unwrapping
+                    </CardTitle>
                     <CardDescription className="yaya-body">
                       Extract data from nested n8n response structure
                     </CardDescription>
@@ -569,24 +709,34 @@ export function WebhookConfigurationModal({
                       <Switch
                         id="unwrap-output"
                         checked={config.unwrapOutput?.enabled || false}
-                        onCheckedChange={(checked) =>
+                        onCheckedChange={checked =>
                           setConfig({
                             ...config,
-                            unwrapOutput: { ...config.unwrapOutput, enabled: checked },
+                            unwrapOutput: {
+                              ...config.unwrapOutput,
+                              enabled: checked,
+                            },
                           })
                         }
                       />
-                      <Label htmlFor="unwrap-output">Enable output unwrapping</Label>
+                      <Label htmlFor="unwrap-output">
+                        Enable output unwrapping
+                      </Label>
                     </div>
                     {config.unwrapOutput?.enabled && (
                       <div className="space-y-2">
-                        <Label className="text-sm yaya-subheading">Data Path</Label>
+                        <Label className="text-sm yaya-subheading">
+                          Data Path
+                        </Label>
                         <Input
                           value={config.unwrapOutput.dataPath || ''}
-                          onChange={(e) =>
+                          onChange={e =>
                             setConfig({
                               ...config,
-                              unwrapOutput: { ...config.unwrapOutput, dataPath: e.target.value },
+                              unwrapOutput: {
+                                ...config.unwrapOutput,
+                                dataPath: e.target.value,
+                              },
                             })
                           }
                           placeholder="response.data.result"
@@ -599,18 +749,23 @@ export function WebhookConfigurationModal({
 
               <Card className="p-4">
                 <CardHeader className="p-0 pb-4">
-                  <CardTitle className="text-lg yaya-heading">Response Handling</CardTitle>
+                  <CardTitle className="text-lg yaya-heading">
+                    Response Handling
+                  </CardTitle>
                   <CardDescription className="yaya-body">
-                    Configure how to detect success/error and extract data from responses
+                    Configure how to detect success/error and extract data from
+                    responses
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0 space-y-4">
                   <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm yaya-subheading">Success Path</Label>
+                      <Label className="text-sm yaya-subheading">
+                        Success Path
+                      </Label>
                       <Input
                         value={config.responseHandling.successPath || ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           setConfig({
                             ...config,
                             responseHandling: {
@@ -623,10 +778,12 @@ export function WebhookConfigurationModal({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm yaya-subheading">Error Path</Label>
+                      <Label className="text-sm yaya-subheading">
+                        Error Path
+                      </Label>
                       <Input
                         value={config.responseHandling.errorPath || ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           setConfig({
                             ...config,
                             responseHandling: {
@@ -639,10 +796,12 @@ export function WebhookConfigurationModal({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm yaya-subheading">Data Path</Label>
+                      <Label className="text-sm yaya-subheading">
+                        Data Path
+                      </Label>
                       <Input
                         value={config.responseHandling.dataPath || ''}
-                        onChange={(e) =>
+                        onChange={e =>
                           setConfig({
                             ...config,
                             responseHandling: {
@@ -671,7 +830,11 @@ export function WebhookConfigurationModal({
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isLoading} className="yaya-button">
+          <Button
+            onClick={handleSave}
+            disabled={isLoading}
+            className="yaya-button"
+          >
             {isLoading ? 'Saving...' : 'Save Configuration'}
           </Button>
         </DialogFooter>

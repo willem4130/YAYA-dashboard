@@ -10,7 +10,7 @@ export interface WebhookFieldMapping {
     | 'camelCase'
     | 'snake_case'
     | 'kebab-case'
-  defaultValue?: any
+  defaultValue?: unknown
   required?: boolean
 }
 
@@ -29,7 +29,7 @@ export interface WebhookConfiguration {
   wrapInput?: {
     enabled: boolean
     rootKey?: string
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   }
 
   unwrapOutput?: {
@@ -124,11 +124,11 @@ export const WebhookConfigurationSchema = z.object({
     successPath: z.string().optional(),
     errorPath: z.string().optional(),
     dataPath: z.string().optional(),
-  }),
+  }).optional(),
   n8nSettings: z.object({
     webhookUrl: z.string().min(1),
     method: z.enum(['POST', 'GET', 'PUT', 'PATCH']),
-    headers: z.record(z.string()).optional(),
+    headers: z.record(z.string()).default({}),
     authentication: z
       .object({
         type: z.enum(['none', 'bearer', 'basic', 'custom']),
@@ -137,7 +137,7 @@ export const WebhookConfigurationSchema = z.object({
         password: z.string().optional(),
         customHeaders: z.record(z.string()).optional(),
       })
-      .optional(),
+      .default({ type: 'none' }),
   }),
   metadata: z.object({
     createdAt: z.string(),
@@ -165,8 +165,12 @@ export class WebhookConfigurationService {
 
   // Save configuration (with API fallback)
   async saveConfiguration(config: WebhookConfiguration): Promise<void> {
+    console.log('Attempting to save config:', JSON.stringify(config, null, 2))
+    
     const validation = WebhookConfigurationSchema.safeParse(config)
     if (!validation.success) {
+      console.error('Validation failed:', validation.error)
+      console.error('Config that failed:', config)
       throw new Error(
         `Invalid webhook configuration: ${validation.error.message}`
       )
@@ -245,10 +249,10 @@ export class WebhookConfigurationService {
 
   // Apply input mappings to transform YAYA data for n8n
   applyInputMappings(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     config: WebhookConfiguration
-  ): Record<string, any> {
-    let transformed: Record<string, any> = {}
+  ): Record<string, unknown> {
+    const transformed: Record<string, unknown> = {}
 
     // Apply field mappings
     for (const mapping of config.inputMappings) {
@@ -276,7 +280,7 @@ export class WebhookConfigurationService {
 
     // Apply input wrapping if enabled
     if (config.wrapInput?.enabled) {
-      const wrapped: Record<string, any> = {}
+      const wrapped: Record<string, unknown> = {}
 
       if (config.wrapInput.rootKey) {
         wrapped[config.wrapInput.rootKey] = transformed
@@ -305,9 +309,9 @@ export class WebhookConfigurationService {
 
   // Apply output mappings to transform n8n response for YAYA
   applyOutputMappings(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     config: WebhookConfiguration
-  ): Record<string, any> {
+  ): Record<string, unknown> {
     // First, unwrap if enabled
     let sourceData = data
     if (config.unwrapOutput?.enabled && config.unwrapOutput.dataPath) {
@@ -315,7 +319,7 @@ export class WebhookConfigurationService {
         this.getNestedValue(data, config.unwrapOutput.dataPath) || data
     }
 
-    let transformed: Record<string, any> = {}
+    const transformed: Record<string, unknown> = {}
 
     // Apply field mappings
     for (const mapping of config.outputMappings) {
@@ -344,12 +348,12 @@ export class WebhookConfigurationService {
 
   // Check if response indicates success/error
   checkResponseStatus(
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     config: WebhookConfiguration
   ): {
     success: boolean
     error?: string
-    resultData?: any
+    resultData?: unknown
   } {
     const { responseHandling } = config
 
@@ -384,12 +388,16 @@ export class WebhookConfigurationService {
   }
 
   // Helper: Get nested object value by path (e.g., "data.result.value")
-  private getNestedValue(obj: any, path: string): any {
+  private getNestedValue(obj: unknown, path: string): unknown {
     return path.split('.').reduce((current, key) => current?.[key], obj)
   }
 
   // Helper: Set nested object value by path
-  private setNestedValue(obj: any, path: string, value: any): void {
+  private setNestedValue(
+    obj: Record<string, unknown>,
+    path: string,
+    value: unknown
+  ): void {
     const keys = path.split('.')
     const lastKey = keys.pop()
     if (!lastKey) return
