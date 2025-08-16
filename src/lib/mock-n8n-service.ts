@@ -2,14 +2,14 @@
 // Provides realistic responses when actual n8n instance is unavailable
 
 export class MockN8nService {
-  private readonly mockExecutions = new Map<string, any>()
+  private readonly mockExecutions = new Map<string, Record<string, unknown>>()
   private readonly delay = (ms: number) =>
     new Promise(resolve => setTimeout(resolve, ms))
 
   async executeWorkflowWebhook(
     webhookId: string,
-    payload: Record<string, any>
-  ): Promise<{ executionId: string; data?: any }> {
+    payload: Record<string, unknown>
+  ): Promise<{ executionId: string; data?: unknown }> {
     // Simulate network delay
     await this.delay(500 + Math.random() * 1000)
 
@@ -37,7 +37,9 @@ export class MockN8nService {
     return { executionId }
   }
 
-  async getExecutionStatus(executionId: string): Promise<any> {
+  async getExecutionStatus(
+    executionId: string
+  ): Promise<Record<string, unknown>> {
     await this.delay(200 + Math.random() * 300)
 
     const execution = this.mockExecutions.get(executionId)
@@ -76,7 +78,7 @@ export class MockN8nService {
     }
   }
 
-  private completeExecution(executionId: string, workflowId: string) {
+  private completeExecution(executionId: string, _workflowId: string) {
     const execution = this.mockExecutions.get(executionId)
     if (execution) {
       execution.finished = true
@@ -88,8 +90,8 @@ export class MockN8nService {
     }
   }
 
-  private generateMockOutputs(workflowId: string): Record<string, any> {
-    const outputs: Record<string, any> = {}
+  private generateMockOutputs(workflowId: string): Record<string, unknown> {
+    const outputs: Record<string, unknown> = {}
 
     switch (workflowId) {
       case 'spring-collection-storytelling':
@@ -351,10 +353,18 @@ export function shouldUseMockService(): boolean {
       'primary-production-c041f.up.railway.app'
     )
   ) {
+    // But only if we have a real API key (not dummy/mock key)
+    if (process.env.N8N_API_KEY === 'dummy-key-to-bypass-mock') {
+      return true // Use mock service if dummy key
+    }
     return false
   }
   // Also check for the old n8n cloud URL for backwards compatibility
   if (process.env.N8N_WEBHOOK_BASE_URL?.includes('willem4130.app.n8n.cloud')) {
+    // But only if we have a real API key (not dummy/mock key)
+    if (process.env.N8N_API_KEY === 'dummy-key-to-bypass-mock') {
+      return true // Use mock service if dummy key
+    }
     return false
   }
   return !process.env.N8N_API_KEY || process.env.NODE_ENV === 'development'
